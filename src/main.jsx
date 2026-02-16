@@ -23,9 +23,11 @@ const COINS = [
   { id: "decentraland",     symbol: "MANA",   name: "Decentraland",     tgePrice: 0.024,   tgeDate: "2017-08" },
 ];
 
-const CG_API = "https://api.coingecko.com/api/v3";
+const CG = "https://api.coingecko.com/api/v3";
 const FNG_API = "https://api.alternative.me/fng/?limit=1";
+const FNG_IMG = "https://alternative.me/crypto/fear-and-greed-index.png";
 
+/* ── Format helpers ── */
 function fmtPrice(p) {
   if (p == null) return "\u2014";
   if (p >= 1000) return "$" + p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -54,6 +56,121 @@ function fmtRatio(v) {
   return v.toFixed(2) + " x";
 }
 
+/* ── Mini sparkline for banner cards ── */
+function MiniSpark({ data, color, width = 80, height = 28 }) {
+  if (!data || data.length < 2) return null;
+  const mn = Math.min(...data), mx = Math.max(...data), r = mx - mn || 1;
+  const pts = data.map((v, i) => ((i / (data.length - 1)) * width) + "," + (height - ((v - mn) / r) * (height - 4) - 2)).join(" ");
+  const gradId = "g" + Math.random().toString(36).slice(2, 6);
+  const fillPts = pts + ` ${width},${height} 0,${height}`;
+  return (
+    <svg width={width} height={height} style={{ display: "block" }}>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={fillPts} fill={`url(#${gradId})`} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ── Dominance bar chart ── */
+function DomBar({ btc, eth }) {
+  const other = Math.max(0, 100 - (btc || 0) - (eth || 0));
+  return (
+    <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", marginTop: 6, background: "#e5e7eb" }}>
+      <div style={{ width: (btc || 0) + "%", background: "#f7931a", transition: "width .3s" }} title={"BTC " + (btc||0).toFixed(1) + "%"} />
+      <div style={{ width: (eth || 0) + "%", background: "#627eea", transition: "width .3s" }} title={"ETH " + (eth||0).toFixed(1) + "%"} />
+      <div style={{ width: other + "%", background: "#d1d5db" }} />
+    </div>
+  );
+}
+
+/* ── Top Banner ── */
+function TopBanner({ globalData, fng, mcapHistory, volHistory }) {
+  const mc = globalData?.total_market_cap?.usd;
+  const mcChange = globalData?.market_cap_change_percentage_24h_usd;
+  const vol = globalData?.total_volume?.usd;
+  const btcD = globalData?.market_cap_percentage?.btc;
+  const ethD = globalData?.market_cap_percentage?.eth;
+
+  const cardStyle = { background: "#f8f9fa", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 16px", flex: "1 1 200px", minWidth: 180 };
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+      {/* Market Cap */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Market Cap</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginTop: 2 }}>{mc ? fmtMcap(mc) : "\u2014"}</div>
+            {mcChange != null && (
+              <div style={{ fontSize: 12, fontWeight: 600, color: mcChange >= 0 ? "#16a34a" : "#dc2626", marginTop: 1 }}>
+                {fmtPct(mcChange)}
+              </div>
+            )}
+          </div>
+          <MiniSpark data={mcapHistory} color={mcChange >= 0 ? "#16a34a" : "#dc2626"} />
+        </div>
+      </div>
+
+      {/* 24h Volume */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>24h Volume</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginTop: 2 }}>{vol ? fmtMcap(vol) : "\u2014"}</div>
+          </div>
+          <MiniSpark data={volHistory} color="#2563eb" />
+        </div>
+      </div>
+
+      {/* BTC & ETH Dominance */}
+      <div style={cardStyle}>
+        <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Dominance</div>
+        <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: "#f7931a" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>BTC {btcD != null ? btcD.toFixed(1) + "%" : "\u2014"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: "#627eea" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>ETH {ethD != null ? ethD.toFixed(1) + "%" : "\u2014"}</span>
+          </div>
+          <span style={{ fontSize: 12, color: "#9ca3af", alignSelf: "center" }}>Others {btcD != null && ethD != null ? (100 - btcD - ethD).toFixed(1) + "%" : ""}</span>
+        </div>
+        <DomBar btc={btcD} eth={ethD} />
+      </div>
+
+      {/* Fear & Greed */}
+      <div style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 12 }}>
+        <img src={FNG_IMG} alt="Fear & Greed" width={80} height={80} style={{ borderRadius: 8 }} />
+        <div>
+          <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Fear & Greed</div>
+          {fng ? (
+            <>
+              <div style={{ fontSize: 26, fontWeight: 700, color: fngColor(parseInt(fng.value)), marginTop: 2 }}>{fng.value}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: fngColor(parseInt(fng.value)) }}>{fng.value_classification}</div>
+            </>
+          ) : <div style={{ fontSize: 14, color: "#9ca3af", marginTop: 4 }}>Loading...</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function fngColor(v) {
+  if (v <= 25) return "#dc2626";
+  if (v <= 45) return "#ea580c";
+  if (v <= 55) return "#ca8a04";
+  if (v <= 75) return "#65a30d";
+  return "#16a34a";
+}
+
+/* ── Table components ── */
 function PctCell({ value }) {
   if (value == null) return <td style={{ ...S.tdR, color: "#aaa" }}>{"\u2014"}</td>;
   const pos = value >= 0;
@@ -75,50 +192,9 @@ function Spark({ data }) {
   return <svg width={W} height={H}><polyline points={pts} fill="none" stroke={up ? "#16a34a" : "#dc2626"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-function fngColor(v) {
-  if (v <= 25) return "#dc2626";
-  if (v <= 45) return "#ea580c";
-  if (v <= 55) return "#ca8a04";
-  if (v <= 75) return "#65a30d";
-  return "#16a34a";
-}
+const S = { tdR: { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" } };
 
-function TopBanner({ globalData, fng }) {
-  const items = [];
-  if (globalData) {
-    const mc = globalData.total_market_cap?.usd;
-    const mcChange = globalData.market_cap_change_percentage_24h_usd;
-    items.push({ label: "Market Cap", value: mc ? fmtMcap(mc) : "\u2014", sub: mcChange != null ? fmtPct(mcChange) : null, subColor: mcChange >= 0 ? "#16a34a" : "#dc2626" });
-    const btcDom = globalData.market_cap_percentage?.btc;
-    items.push({ label: "BTC Dominance", value: btcDom != null ? btcDom.toFixed(1) + "%" : "\u2014" });
-    const ethDom = globalData.market_cap_percentage?.eth;
-    items.push({ label: "ETH Dominance", value: ethDom != null ? ethDom.toFixed(1) + "%" : "\u2014" });
-    const coins = globalData.active_cryptocurrencies;
-    items.push({ label: "Active Coins", value: coins ? coins.toLocaleString() : "\u2014" });
-  }
-  if (fng) {
-    items.push({ label: "Fear & Greed", value: fng.value, sub: fng.value_classification, subColor: fngColor(parseInt(fng.value)), isFng: true });
-  }
-
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
-      {items.map((it, i) => (
-        <div key={i} style={{ background: "#f8f9fa", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 16px", minWidth: 140, flex: "1 1 auto" }}>
-          <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{it.label}</div>
-          <div style={{ fontSize: it.isFng ? 22 : 16, fontWeight: 700, color: it.isFng ? fngColor(parseInt(it.value)) : "#111", marginTop: 2 }}>
-            {it.value}
-          </div>
-          {it.sub && <div style={{ fontSize: 12, color: it.subColor || "#6b7280", fontWeight: 600, marginTop: 1 }}>{it.sub}</div>}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-const S = {
-  tdR: { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" },
-};
-
+/* ── Main Dashboard ── */
 function CryptoDashboard() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,16 +203,30 @@ function CryptoDashboard() {
   const [auto, setAuto] = useState(true);
   const [globalData, setGlobalData] = useState(null);
   const [fng, setFng] = useState(null);
+  const [mcapHistory, setMcapHistory] = useState(null);
+  const [volHistory, setVolHistory] = useState(null);
   const timer = useRef(null);
 
   const fetchGlobal = useCallback(async () => {
     try {
       const [gRes, fRes] = await Promise.all([
-        fetch(CG_API + "/global"),
+        fetch(CG + "/global"),
         fetch(FNG_API),
       ]);
       if (gRes.ok) { const gj = await gRes.json(); setGlobalData(gj.data); }
-      if (fRes.ok) { const fj = await fRes.json(); if (fj.data && fj.data[0]) setFng(fj.data[0]); }
+      if (fRes.ok) { const fj = await fRes.json(); if (fj.data?.[0]) setFng(fj.data[0]); }
+    } catch (e) { /* silent */ }
+  }, []);
+
+  /* Fetch BTC 7d chart as proxy for market cap trend */
+  const fetchCharts = useCallback(async () => {
+    try {
+      const res = await fetch(CG + "/coins/bitcoin/market_chart?vs_currency=usd&days=7");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.market_caps) setMcapHistory(json.market_caps.map(d => d[1]));
+        if (json.total_volumes) setVolHistory(json.total_volumes.map(d => d[1]));
+      }
     } catch (e) { /* silent */ }
   }, []);
 
@@ -144,7 +234,7 @@ function CryptoDashboard() {
     try {
       setErr(null);
       const ids = COINS.map(c => c.id).join(",");
-      const url = CG_API + "/coins/markets?vs_currency=usd&ids=" + ids +
+      const url = CG + "/coins/markets?vs_currency=usd&ids=" + ids +
         "&order=market_cap_desc&per_page=100&page=1&sparkline=true" +
         "&price_change_percentage=1h%2C7d%2C30d";
       const res = await fetch(url);
@@ -175,7 +265,7 @@ function CryptoDashboard() {
 
   const fetchAll = useCallback(() => { fetchGlobal(); fetchCoins(); }, [fetchGlobal, fetchCoins]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { fetchAll(); fetchCharts(); }, [fetchAll, fetchCharts]);
   useEffect(() => {
     if (auto) timer.current = setInterval(fetchAll, 60000);
     return () => { if (timer.current) clearInterval(timer.current); };
@@ -190,8 +280,7 @@ function CryptoDashboard() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#fff", color: "#111", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 16px" }}>
-        {/* Header */}
+      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "24px 16px" }}>
         <div style={{ marginBottom: 16 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 28 }}>{"\uD83D\uDCC8"}</span> Crypto Dashboard
@@ -200,14 +289,12 @@ function CryptoDashboard() {
             {updated && <span>Last updated: {updated.toLocaleTimeString("en-US")}</span>}
             <button onClick={fetchAll} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline", fontSize: 13 }}>Refresh</button>
             <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-              <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} />
-              Auto-refresh 60s
+              <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} /> Auto-refresh 60s
             </label>
           </div>
         </div>
 
-        {/* Top Banner */}
-        <TopBanner globalData={globalData} fng={fng} />
+        <TopBanner globalData={globalData} fng={fng} mcapHistory={mcapHistory} volHistory={volHistory} />
 
         {err && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: 12, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>{err}</div>}
 
@@ -234,7 +321,7 @@ function CryptoDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r, i) => (
+                {rows.map((r) => (
                   <tr key={r.id} style={{ borderBottom: "1px solid #f3f4f6", transition: "background .15s" }}
                     onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
                     onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
@@ -273,7 +360,7 @@ function CryptoDashboard() {
         )}
 
         <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
-          Data: CoinGecko Free API + Alternative.me Fear & Greed API &middot; Auto-refresh every 60s &middot; Sorted by market cap rank
+          Data: CoinGecko API + Alternative.me &middot; Auto-refresh 60s &middot; Sorted by market cap rank
         </div>
       </div>
     </div>
