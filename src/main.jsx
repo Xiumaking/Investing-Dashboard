@@ -195,7 +195,7 @@ function Spark({ data }) {
 const S = { tdR: { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" } };
 
 /* ── Main Dashboard ── */
-function Investing Dashboard() {
+function CryptoDashboard() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
@@ -283,7 +283,7 @@ function Investing Dashboard() {
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "24px 16px" }}>
         <div style={{ marginBottom: 16 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 28 }}>{"\uD83D\uDCC8"}</span> Investing Dashboard
+            <span style={{ fontSize: 28 }}>{"\uD83D\uDCC8"}</span> Crypto Dashboard
           </h1>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 13, color: "#6b7280" }}>
             {updated && <span>Last updated: {updated.toLocaleTimeString("en-US")}</span>}
@@ -367,4 +367,4 @@ function Investing Dashboard() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<InvstingDashboard />);
+ReactDOM.createRoot(document.getElementById("root")).render(<CryptoDashboard />);
