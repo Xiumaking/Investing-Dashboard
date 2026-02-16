@@ -18,11 +18,24 @@ import ReactDOM from "react-dom/client";
  *   - tgeDate: For reference only. Use "" if unknown.
  */
 const COINS = [
-  { id: "bitcoin",  symbol: "BTC", name: "Bitcoin",  tgePrice: 0.0008, tgeDate: "2009-01" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", tgePrice: 0.311,  tgeDate: "2015-07" },
-  { id: "ripple",   symbol: "XRP", name: "XRP",      tgePrice: 0.006,  tgeDate: "2013-08" },
-  { id: "solana",   symbol: "SOL", name: "Solana",   tgePrice: 0.22,   tgeDate: "2020-03" },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", tgePrice: 0.0002, tgeDate: "2013-12" },
+  { id: "bitcoin",          symbol: "BTC",    name: "Bitcoin",          tgePrice: 0.0008,  tgeDate: "2009-01" },
+  { id: "ethereum",         symbol: "ETH",    name: "Ethereum",         tgePrice: 0.311,   tgeDate: "2015-07" },
+  { id: "ripple",           symbol: "XRP",    name: "XRP",              tgePrice: 0.006,   tgeDate: "2013-08" },
+  { id: "binancecoin",      symbol: "BNB",    name: "BNB",              tgePrice: 0.15,    tgeDate: "2017-07" },
+  { id: "hyperliquid",      symbol: "HYPE",   name: "Hyperliquid",      tgePrice: 3.81,    tgeDate: "2024-11" },
+  { id: "avalanche-2",      symbol: "AVAX",   name: "Avalanche",        tgePrice: 0.50,    tgeDate: "2020-09" },
+  { id: "world-liberty-financial", symbol: "WLFI", name: "World Liberty Financial", tgePrice: 0.015, tgeDate: "2024-10" },
+  { id: "mantle",           symbol: "MNT",    name: "Mantle",           tgePrice: 0.42,    tgeDate: "2023-07" },
+  { id: "aster-2",          symbol: "ASTER",  name: "Aster",            tgePrice: 0.50,    tgeDate: "2025-09" },
+  { id: "ondo-finance",     symbol: "ONDO",   name: "Ondo Finance",     tgePrice: 0.089,   tgeDate: "2024-01" },
+  { id: "worldcoin-wld",    symbol: "WLD",    name: "Worldcoin",        tgePrice: 2.00,    tgeDate: "2023-07" },
+  { id: "ethena",           symbol: "ENA",    name: "Ethena",           tgePrice: 0.36,    tgeDate: "2024-04" },
+  { id: "stable-2",         symbol: "STABLE", name: "Stable",           tgePrice: 0.01,    tgeDate: "2025-01" },
+  { id: "pudgy-penguins",   symbol: "PENGU",  name: "Pudgy Penguins",   tgePrice: 0.035,   tgeDate: "2024-12" },
+  { id: "kite-ai",          symbol: "KITE",   name: "Kite",             tgePrice: 0.088,   tgeDate: "2025-11" },
+  { id: "kaia",             symbol: "KAIA",   name: "Kaia",             tgePrice: 0.10,    tgeDate: "2024-11" },
+  { id: "the-sandbox",      symbol: "SAND",   name: "The Sandbox",      tgePrice: 0.0083,  tgeDate: "2020-08" },
+  { id: "decentraland",     symbol: "MANA",   name: "Decentraland",     tgePrice: 0.024,   tgeDate: "2017-08" },
 ];
 
 const API = "https://api.coingecko.com/api/v3";
