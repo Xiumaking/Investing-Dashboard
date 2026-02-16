@@ -21,6 +21,11 @@ const COINS = [
   { id: "kaia",             symbol: "KAIA",   name: "Kaia",             tgePrice: 0.10,    tgeDate: "2024-11" },
   { id: "the-sandbox",      symbol: "SAND",   name: "The Sandbox",      tgePrice: 0.0083,  tgeDate: "2020-08" },
   { id: "decentraland",     symbol: "MANA",   name: "Decentraland",     tgePrice: 0.024,   tgeDate: "2017-08" },
+  { id: "lighter",        symbol: "LIT",      name: "Lighter",          tgePrice: 1.50,    tgeDate: "2025-12" },
+  { id: "yooldo-games",   symbol: "ESPORTS",  name: "Yooldo Games",     tgePrice: 0.05,    tgeDate: "2025" },
+  { id: "delabs-games",   symbol: "DELABS",   name: "Delabs Games",     tgePrice: 0.0033,  tgeDate: "2025-07" },
+  { id: "cross-2",        symbol: "CROSS",    name: "CROSS",            tgePrice: 0.006,   tgeDate: "2025" },
+  
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
