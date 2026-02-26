@@ -17,7 +17,7 @@ const COINS = [
   { id: "ethena",           symbol: "ENA",    name: "Ethena",           tgePrice: 0.36,    tgeDate: "2024-04" },
   { id: "stable-2",         symbol: "STABLE", name: "Stable",           tgePrice: 0.01,    tgeDate: "2025-01" },
   { id: "pudgy-penguins",   symbol: "PENGU",  name: "Pudgy Penguins",   tgePrice: 0.035,   tgeDate: "2024-12" },
-  { id: "kite-ai",          symbol: "KITE",   name: "Kite",             tgePrice: 0.088,   tgeDate: "2025-11" },
+  { id: "kite-2",          symbol: "KITE",   name: "Kite",             tgePrice: 0.088,   tgeDate: "2025-11" },
   { id: "kaia",             symbol: "KAIA",   name: "Kaia",             tgePrice: 0.10,    tgeDate: "2024-11" },
   { id: "the-sandbox",      symbol: "SAND",   name: "The Sandbox",      tgePrice: 0.0083,  tgeDate: "2020-08" },
   { id: "decentraland",     symbol: "MANA",   name: "Decentraland",     tgePrice: 0.024,   tgeDate: "2017-08" },
