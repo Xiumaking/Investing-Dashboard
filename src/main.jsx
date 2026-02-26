@@ -25,7 +25,13 @@ const COINS = [
   { id: "yooldo-games",   symbol: "ESPORTS",  name: "Yooldo Games",     tgePrice: 0.05,    tgeDate: "2025" },
   { id: "delabs-games",   symbol: "DELABS",   name: "Delabs Games",     tgePrice: 0.0033,  tgeDate: "2025-07" },
   { id: "cross-2",        symbol: "CROSS",    name: "CROSS",            tgePrice: 0.006,   tgeDate: "2025" },
-  
+  { id: "wemix-token",     symbol: "WEMIX",   name: "WEMIX",            tgePrice: 0.28,    tgeDate: "2020-10" },
+  { id: "nexpace",         symbol: "NXPC",    name: "Nexpace",          tgePrice: 1.50,    tgeDate: "2025-05" },
+  { id: "marblex",         symbol: "MBX",     name: "MARBLEX",          tgePrice: 1.17,    tgeDate: "2022" },
+  { id: "xpla",            symbol: "XPLA",    name: "XPLA",             tgePrice: 0.30,    tgeDate: "2022-10" },
+  { id: "altava",          symbol: "TAVA",    name: "ALTAVA",           tgePrice: 0.08,    tgeDate: "2022" },
+  { id: "ztx",             symbol: "ZTX",     name: "ZTX",              tgePrice: 0.015,   tgeDate: "2024" },
+  { id: "overprotocol",    symbol: "OVER",    name: "OverProtocol",     tgePrice: 0.80,    tgeDate: "2024" },
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
