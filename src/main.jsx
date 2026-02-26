@@ -252,12 +252,28 @@ function CryptoDashboard() {
       if (res.status === 429) { setErr("API rate limit reached. Auto-retry in 1 min."); return; }
       if (!res.ok) throw new Error("API Error: " + res.status);
       const json = await res.json();
-      const built = json.map((item, idx) => {
+
+      /* ── Fallback: coins/markets에서 누락된 코인을 simple/price로 보완 ── */
+      const fetchedIds = new Set(json.map(item => item.id));
+      const missingCoins = COINS.filter(c => !fetchedIds.has(c.id));
+      let fallbackData = {};
+
+      if (missingCoins.length > 0) {
+        try {
+          const mids = missingCoins.map(c => c.id).join(",");
+          const fbUrl = CG + "/simple/price?ids=" + mids +
+            "&vs_currencies=usd&include_24hr_change=true&include_market_cap=true";
+          const fbRes = await fetch(fbUrl);
+          if (fbRes.ok) fallbackData = await fbRes.json();
+        } catch (e) { /* silent */ }
+      }
+
+      const built = json.map((item) => {
         const coin = COINS.find(c => c.id === item.id);
         const cur = item.current_price;
         const tgeP = coin ? coin.tgePrice : null;
         return {
-          rank: item.market_cap_rank || idx + 1, id: item.id, name: item.name,
+          rank: item.market_cap_rank || 9999, id: item.id, name: item.name,
           symbol: (item.symbol || "").toUpperCase(), image: item.image, current: cur,
           marketCap: item.market_cap, fdv: item.fully_diluted_valuation,
           change1h: item.price_change_percentage_1h_in_currency,
@@ -267,6 +283,21 @@ function CryptoDashboard() {
           tgePrice: tgeP, priceOverTge: tgeP ? cur / tgeP : null,
         };
       });
+
+      /* ── Fallback 코인 추가 ── */
+      for (const mc of missingCoins) {
+        const fb = fallbackData[mc.id];
+        const cur = fb?.usd ?? null;
+        built.push({
+          rank: 9999, id: mc.id, name: mc.name,
+          symbol: mc.symbol, image: null, current: cur,
+          marketCap: fb?.usd_market_cap || null, fdv: null,
+          change1h: null, change7d: null, change30d: null,
+          sparkline: [],
+          tgePrice: mc.tgePrice, priceOverTge: (cur && mc.tgePrice) ? cur / mc.tgePrice : null,
+        });
+      }
+
       built.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
       setRows(built);
       setUpdated(new Date());
