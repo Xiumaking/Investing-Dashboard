@@ -253,36 +253,41 @@ function CryptoDashboard() {
       if (!res.ok) throw new Error("API Error: " + res.status);
       const json = await res.json();
 
-      /* ── Fallback: 누락된 코인을 /coins/{id}로 개별 조회 ── */
+      /* ── Fallback: 누락된 코인을 simple/price 1회로 처리 ── */
       const fetchedIds = new Set(json.map(item => item.id));
       const missingCoins = COINS.filter(c => !fetchedIds.has(c.id));
-      const fallbackItems = [];
+      let fallbackMap = {};
 
       if (missingCoins.length > 0) {
-        const detailPromises = missingCoins.map(async (mc) => {
+        try {
+          const mids = missingCoins.map(c => c.id).join(",");
+          const fbRes = await fetch(CG + "/simple/price?ids=" + mids +
+            "&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true");
+          if (fbRes.ok) fallbackMap = await fbRes.json();
+        } catch (e) { /* silent */ }
+
+        /* 개별 상세 조회 — 1초 간격으로 순차 호출 (rate limit 방어) */
+        for (const mc of missingCoins) {
+          if (!fallbackMap[mc.id]?.usd) continue;
           try {
+            await new Promise(r => setTimeout(r, 1200));
             const dRes = await fetch(CG + "/coins/" + mc.id +
               "?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=true");
-            if (!dRes.ok) return null;
-            const d = await dRes.json();
-            return {
-              id: mc.id,
-              name: d.name || mc.name,
-              symbol: (d.symbol || mc.symbol).toUpperCase(),
-              image: d.image?.small || d.image?.thumb || null,
-              current: d.market_data?.current_price?.usd ?? null,
-              marketCap: d.market_data?.market_cap?.usd || d.market_data?.fully_diluted_valuation?.usd || null,
-              fdv: d.market_data?.fully_diluted_valuation?.usd || null,
-              change1h: d.market_data?.price_change_percentage_1h_in_currency?.usd ?? null,
-              change7d: d.market_data?.price_change_percentage_7d_in_currency?.usd ?? null,
-              change30d: d.market_data?.price_change_percentage_30d_in_currency?.usd ?? null,
-              sparkline: d.market_data?.sparkline_7d?.price || [],
-              tgePrice: mc.tgePrice,
-            };
-          } catch (e) { return null; }
-        });
-        const results = await Promise.all(detailPromises);
-        results.forEach(r => { if (r) fallbackItems.push(r); });
+            if (dRes.ok) {
+              const d = await dRes.json();
+              fallbackMap[mc.id] = {
+                ...fallbackMap[mc.id],
+                image: d.image?.small || null,
+                fdv: d.market_data?.fully_diluted_valuation?.usd || null,
+                mcap: d.market_data?.market_cap?.usd || d.market_data?.fully_diluted_valuation?.usd || null,
+                change1h: d.market_data?.price_change_percentage_1h_in_currency?.usd ?? null,
+                change7d: d.market_data?.price_change_percentage_7d_in_currency?.usd ?? null,
+                change30d: d.market_data?.price_change_percentage_30d_in_currency?.usd ?? null,
+                sparkline: d.market_data?.sparkline_7d?.price || [],
+              };
+            }
+          } catch (e) { /* silent, use simple/price data */ }
+        }
       }
 
       const built = json.map((item) => {
@@ -302,15 +307,20 @@ function CryptoDashboard() {
       });
 
       /* ── Fallback 코인 추가 ── */
-      for (const fb of fallbackItems) {
-        const cur = fb.current;
+      for (const mc of missingCoins) {
+        const fb = fallbackMap[mc.id];
+        const cur = fb?.usd ?? null;
         built.push({
-          rank: 9999, id: fb.id, name: fb.name,
-          symbol: fb.symbol, image: fb.image, current: cur,
-          marketCap: fb.marketCap, fdv: fb.fdv,
-          change1h: fb.change1h, change7d: fb.change7d, change30d: fb.change30d,
-          sparkline: fb.sparkline,
-          tgePrice: fb.tgePrice, priceOverTge: (cur && fb.tgePrice) ? cur / fb.tgePrice : null,
+          rank: 9999, id: mc.id, name: mc.name,
+          symbol: mc.symbol, image: fb?.image || null, current: cur,
+          marketCap: fb?.mcap || fb?.usd_market_cap || null,
+          fdv: fb?.fdv || null,
+          change1h: fb?.change1h ?? null,
+          change7d: fb?.change7d ?? null,
+          change30d: fb?.change30d ?? null,
+          sparkline: fb?.sparkline || [],
+          tgePrice: mc.tgePrice,
+          priceOverTge: (cur && mc.tgePrice) ? cur / mc.tgePrice : null,
         });
       }
 
