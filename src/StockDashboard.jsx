@@ -9,7 +9,7 @@ import React from "react";
  * ══════════════════════════════════════════════════════════════
  */
 const API_KEY = "YOUR_FMP_API_KEY";
-const FMP = "https://financialmodelingprep.com/api/v3";
+const FMP = "https://financialmodelingprep.com/api/stable";
 
 /* ── 상단 배너 지수 목록 ── */
 const INDICES = [
@@ -174,7 +174,7 @@ export default function StockDashboard() {
     try {
       // 지수는 encode 필요 (^, = 등 특수문자)
       const symbols = INDICES.map(i => encodeURIComponent(i.symbol)).join(",");
-      const res = await fetch(FMP + "/quote/" + symbols + "?apikey=" + key);
+  const res = await fetch(FMP + "/quote?symbol=" + symbols + "&apikey=" + key);
       const json = await res.json();
       if (Array.isArray(json)) {
         const map = {};
@@ -243,8 +243,8 @@ const fetchStocks = useCallback(async () => {
       const histPromises = symbols.map(async (sym) => {
         try {
           const res = await fetch(
-            FMP + "/historical-price-full/" + sym + "?from=" + fmt(d30) + "&to=" + fmt(today) + "&apikey=" + key
-          );
+    FMP + "/historical-price-eod/full?symbol=" + sym + "&from=" + fmt(d30) + "&to=" + fmt(today) + "&apikey=" + key
+  );
           if (!res.ok) return { symbol: sym, data: [] };
           const json = await res.json();
           return { symbol: sym, data: json.historical || [] };
