@@ -3,62 +3,44 @@ import React from "react";
 
 /*
  * ══════════════════════════════════════════════════════════════
- *  FMP (Financial Modeling Prep) API — 무료 250 calls/day
- *  가입: https://site.financialmodelingprep.com/developer/docs
- *  /stable/ 엔드포인트 사용 (2025-08 이후 신규 가입자 필수)
+ *  Twelve Data API — 무료 8 credits/min, 800/day
+ *  가입: https://twelvedata.com/ (Google 로그인 가능)
+ *  Dashboard에서 API Key 복사
  * ══════════════════════════════════════════════════════════════
  */
-const API_KEY = "YOUR_FMP_API_KEY";
-const FMP = "https://financialmodelingprep.com/stable";
+const TD = "https://api.twelvedata.com";
 
 /* ── 상단 배너 지수 목록 ── */
 const INDICES = [
-  { symbol: "^DJI",      name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "^GSPC",     name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "^IXIC",     name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "YM=F",      name: "Dow Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
-  { symbol: "ES=F",      name: "S&P Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
-  { symbol: "NQ=F",      name: "Nasdaq Futures", flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
-  { symbol: "399001.SZ", name: "Shenzhen",       flag: "\u{1F1E8}\u{1F1F3}", group: "China" },
-  { symbol: "^HSI",      name: "Hang Seng",      flag: "\u{1F1ED}\u{1F1F0}", group: "China" },
-  { symbol: "^KS11",     name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
-  { symbol: "^KQ11",     name: "KOSDAQ",         flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+  { symbol: "DJI",    name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "SPX",    name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "IXIC",   name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "HSI",    name: "Hang Seng",      flag: "\u{1F1ED}\u{1F1F0}", group: "Asia" },
+  { symbol: "KOSPI",  name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
 ];
 
 /* ── 글로벌 시총 Top 20 종목 (2026-02 기준) ── */
 const TOP_STOCKS = [
-  { symbol: "NVDA",  name: "NVIDIA" },
-  { symbol: "AAPL",  name: "Apple" },
-  { symbol: "GOOGL", name: "Alphabet" },
-  { symbol: "MSFT",  name: "Microsoft" },
-  { symbol: "AMZN",  name: "Amazon" },
-  { symbol: "META",  name: "Meta Platforms" },
-  { symbol: "TSLA",  name: "Tesla" },
-  { symbol: "TSM",   name: "TSMC" },
-  { symbol: "BRK-B", name: "Berkshire Hathaway" },
-  { symbol: "AVGO",  name: "Broadcom" },
-  { symbol: "LLY",   name: "Eli Lilly" },
-  { symbol: "WMT",   name: "Walmart" },
-  { symbol: "JPM",   name: "JPMorgan Chase" },
-  { symbol: "V",     name: "Visa" },
-  { symbol: "MA",    name: "Mastercard" },
-  { symbol: "UNH",   name: "UnitedHealth" },
-  { symbol: "XOM",   name: "Exxon Mobil" },
-  { symbol: "COST",  name: "Costco" },
-  { symbol: "JNJ",   name: "Johnson & Johnson" },
-  { symbol: "ASML",  name: "ASML Holdings" },
+  "NVDA", "AAPL", "GOOGL", "MSFT", "AMZN",
+  "META", "TSLA", "TSM", "BRK.B", "AVGO",
+  "LLY", "WMT", "JPM", "V", "MA",
+  "UNH", "XOM", "COST", "JNJ", "ASML",
 ];
 
 /* ── Format helpers ── */
 function fmtPrice(p) {
   if (p == null) return "\u2014";
-  if (Math.abs(p) >= 1000) return "$" + p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (Math.abs(p) >= 1) return "$" + p.toFixed(2);
-  return "$" + p.toFixed(4);
+  const n = parseFloat(p);
+  if (isNaN(n)) return "\u2014";
+  if (Math.abs(n) >= 1000) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (Math.abs(n) >= 1) return "$" + n.toFixed(2);
+  return "$" + n.toFixed(4);
 }
 function fmtIdx(p) {
   if (p == null) return "\u2014";
-  return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const n = parseFloat(p);
+  if (isNaN(n)) return "\u2014";
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtMcap(m) {
   if (m == null) return "\u2014";
@@ -73,11 +55,11 @@ function fmtPct(v) {
   return s + v.toFixed(2) + "%";
 }
 
-/* ── Index Card Component ── */
+/* ── Index Card ── */
 function IndexCard({ data, meta }) {
-  const price = data?.price ?? null;
-  const change = data?.change ?? null;
-  const changePct = data?.changesPercentage ?? null;
+  const price = data?.close ? parseFloat(data.close) : null;
+  const pctChange = data?.percent_change ? parseFloat(data.percent_change) : null;
+  const change = data?.change ? parseFloat(data.change) : null;
   const pos = (change ?? 0) >= 0;
   const color = pos ? "#16a34a" : "#dc2626";
   const bgColor = pos ? "rgba(22,163,74,0.06)" : "rgba(220,38,38,0.06)";
@@ -85,7 +67,7 @@ function IndexCard({ data, meta }) {
   return (
     <div style={{
       background: bgColor, border: "1px solid " + (pos ? "rgba(22,163,74,0.15)" : "rgba(220,38,38,0.15)"),
-      borderRadius: 10, padding: "10px 14px", minWidth: 145, flex: "1 1 145px",
+      borderRadius: 10, padding: "10px 14px", minWidth: 155, flex: "1 1 155px",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
         <span style={{ fontSize: 14 }}>{meta.flag}</span>
@@ -96,7 +78,7 @@ function IndexCard({ data, meta }) {
       </div>
       <div style={{ fontSize: 12, fontWeight: 600, color, marginTop: 2 }}>
         {change != null ? (pos ? "+" : "") + change.toFixed(2) : ""}{" "}
-        {changePct != null ? "(" + fmtPct(changePct) + ")" : ""}
+        {pctChange != null ? "(" + fmtPct(pctChange) + ")" : ""}
       </div>
     </div>
   );
@@ -156,128 +138,156 @@ export default function StockDashboard() {
   const [updated, setUpdated] = useState(null);
   const [auto, setAuto] = useState(true);
   const [apiKey, setApiKey] = useState(() => {
-    try { return localStorage.getItem("fmp_api_key") || ""; } catch { return ""; }
+    try { return localStorage.getItem("td_api_key") || ""; } catch { return ""; }
   });
   const [showKeyInput, setShowKeyInput] = useState(false);
   const timer = useRef(null);
 
-  const key = apiKey || API_KEY;
-  const hasKey = key && key !== "YOUR_FMP_API_KEY";
+  const hasKey = apiKey && apiKey.length > 5;
 
-  /* ── Fetch index quotes ── */
+  /* ── Fetch index quotes (1 API call) ── */
   const fetchIndices = useCallback(async () => {
     if (!hasKey) return;
     try {
-      const symbols = INDICES.map(i => encodeURIComponent(i.symbol)).join(",");
-      const res = await fetch(FMP + "/quote?symbol=" + symbols + "&apikey=" + key);
+      const symbols = INDICES.map(i => i.symbol).join(",");
+      const res = await fetch(TD + "/quote?symbol=" + symbols + "&apikey=" + apiKey);
       const json = await res.json();
-      if (Array.isArray(json)) {
-        const map = {};
-        json.forEach(item => { map[item.symbol] = item; });
-        setIndexData(map);
-      }
-    } catch (e) { /* silent */ }
-  }, [hasKey, key]);
 
-  /* ── Fetch stock quotes ── */
+      if (json.code === 429) return; // rate limit
+      if (json.status === "error") return;
+
+      const map = {};
+      // Single symbol returns object, multiple returns object keyed by symbol
+      if (json.close) {
+        // single result
+        map[INDICES[0].symbol] = json;
+      } else {
+        Object.entries(json).forEach(([sym, data]) => {
+          if (data && !data.code) map[sym] = data;
+        });
+      }
+      setIndexData(map);
+    } catch (e) { /* silent */ }
+  }, [hasKey, apiKey]);
+
+  /* ── Fetch stock quotes (1 API call for batch) ── */
   const fetchStocks = useCallback(async () => {
     if (!hasKey) { setLoading(false); return; }
     try {
       setErr(null);
-      const symbols = TOP_STOCKS.map(s => s.symbol).join(",");
-      const res = await fetch(FMP + "/quote?symbol=" + symbols + "&apikey=" + key);
-      const json = await res.json();
+      const symbols = TOP_STOCKS.join(",");
+      const res = await fetch(TD + "/quote?symbol=" + symbols + "&apikey=" + apiKey);
+      const text = await res.text();
 
-      if (json["Error Message"]) {
-        setErr("FMP API: " + json["Error Message"]);
-        setLoading(false);
-        return;
-      }
-      if (!Array.isArray(json) || json.length === 0) {
-        setErr("No data returned. Check API key or plan limits.");
+      let json;
+      try { json = JSON.parse(text); } catch {
+        setErr("API returned invalid response. Check your API key.");
         setLoading(false);
         return;
       }
 
-      const rows = json.map(item => {
-        const meta = TOP_STOCKS.find(s => s.symbol === item.symbol);
-        return {
-          symbol: item.symbol,
-          name: item.name || meta?.name || item.symbol,
-          price: item.price,
-          marketCap: item.marketCap,
-          change24h: item.changesPercentage,
+      if (json.code === 401) {
+        setErr("Invalid API key. Please check your Twelve Data API key.");
+        setLoading(false);
+        return;
+      }
+      if (json.code === 429) {
+        setErr("API rate limit reached (8/min free). Please wait a moment.");
+        setLoading(false);
+        return;
+      }
+      if (json.status === "error") {
+        setErr("API Error: " + (json.message || "Unknown error"));
+        setLoading(false);
+        return;
+      }
+
+      const rows = [];
+      Object.entries(json).forEach(([sym, data]) => {
+        if (!data || data.code) return; // skip errors
+        rows.push({
+          symbol: data.symbol || sym,
+          name: data.name || sym,
+          price: data.close ? parseFloat(data.close) : null,
+          change: data.change ? parseFloat(data.change) : null,
+          changePct: data.percent_change ? parseFloat(data.percent_change) : null,
+          volume: data.volume ? parseInt(data.volume) : null,
+          high52w: data.fifty_two_week?.high ? parseFloat(data.fifty_two_week.high) : null,
+          low52w: data.fifty_two_week?.low ? parseFloat(data.fifty_two_week.low) : null,
           change7d: null,
           change30d: null,
-        };
+        });
       });
 
-      rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
       setStockRows(rows);
       setUpdated(new Date());
       setLoading(false);
 
+      // Fetch 7D/30D changes in background (uses more API credits)
       fetchHistoricalChanges(rows);
     } catch (e) { setErr(e.message); setLoading(false); }
-  }, [hasKey, key]);
+  }, [hasKey, apiKey]);
 
-  /* ── Fetch historical changes for 7D & 30D ── */
+  /* ── Fetch 30D historical for 7D & 30D change calc ── */
   const fetchHistoricalChanges = useCallback(async (rows) => {
-    if (!hasKey) return;
-    try {
-      const today = new Date();
-      const d30 = new Date(today); d30.setDate(d30.getDate() - 30);
-      const fmt = d => d.toISOString().slice(0, 10);
+    if (!hasKey || rows.length === 0) return;
 
-      const symbols = rows.map(r => r.symbol);
+    // To save API credits, batch 5 symbols per call
+    const batchSize = 5;
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batch = rows.slice(i, i + batchSize);
+      const symbols = batch.map(r => r.symbol).join(",");
 
-      const histPromises = symbols.map(async (sym) => {
-        try {
-          const res = await fetch(
-            FMP + "/historical-price-eod/full?symbol=" + encodeURIComponent(sym) +
-            "&from=" + fmt(d30) + "&to=" + fmt(today) + "&apikey=" + key
-          );
-          if (!res.ok) return { symbol: sym, data: [] };
-          const json = await res.json();
-          return { symbol: sym, data: json.historical || json || [] };
-        } catch { return { symbol: sym, data: [] }; }
-      });
+      try {
+        // Wait 8 seconds between batches to respect 8 credits/min
+        if (i > 0) await new Promise(r => setTimeout(r, 8000));
 
-      const results = await Promise.all(histPromises);
+        const res = await fetch(
+          TD + "/time_series?symbol=" + symbols +
+          "&interval=1day&outputsize=30&apikey=" + apiKey
+        );
+        const json = await res.json();
+        if (json.code === 429 || json.status === "error") continue;
 
-      setStockRows(prev => {
-        const updated = [...prev];
-        for (const { symbol, data } of results) {
-          if (!Array.isArray(data) || data.length === 0) continue;
-          const row = updated.find(r => r.symbol === symbol);
-          if (!row) continue;
+        setStockRows(prev => {
+          const updated = [...prev];
 
-          const currentPrice = row.price;
-          const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+          const processSymbol = (sym, data) => {
+            if (!data?.values || !Array.isArray(data.values)) return;
+            const row = updated.find(r => r.symbol === sym);
+            if (!row || !row.price) return;
 
-          const d7target = new Date(today); d7target.setDate(d7target.getDate() - 7);
-          const price7d = findClosestPrice(sorted, d7target);
-          if (price7d && currentPrice) row.change7d = ((currentPrice - price7d) / price7d) * 100;
+            const values = data.values; // newest first
+            const currentPrice = row.price;
 
-          const d30target = new Date(today); d30target.setDate(d30target.getDate() - 30);
-          const price30d = findClosestPrice(sorted, d30target);
-          if (price30d && currentPrice) row.change30d = ((currentPrice - price30d) / price30d) * 100;
-        }
-        return updated;
-      });
-    } catch (e) { /* silent */ }
-  }, [hasKey, key]);
+            // 7D change (approx 5 trading days)
+            if (values.length >= 5) {
+              const p7d = parseFloat(values[4]?.close);
+              if (p7d) row.change7d = ((currentPrice - p7d) / p7d) * 100;
+            }
 
-  function findClosestPrice(sorted, targetDate) {
-    const target = targetDate.getTime();
-    let closest = null;
-    let minDiff = Infinity;
-    for (const item of sorted) {
-      const diff = Math.abs(new Date(item.date).getTime() - target);
-      if (diff < minDiff) { minDiff = diff; closest = item.close; }
+            // 30D change (last item)
+            if (values.length >= 20) {
+              const p30d = parseFloat(values[values.length - 1]?.close);
+              if (p30d) row.change30d = ((currentPrice - p30d) / p30d) * 100;
+            }
+          };
+
+          if (batch.length === 1) {
+            // Single symbol: json has meta + values directly
+            processSymbol(batch[0].symbol, json);
+          } else {
+            // Multiple symbols: json is keyed by symbol
+            Object.entries(json).forEach(([sym, data]) => {
+              processSymbol(sym, data);
+            });
+          }
+
+          return updated;
+        });
+      } catch (e) { /* silent */ }
     }
-    return closest;
-  }
+  }, [hasKey, apiKey]);
 
   const fetchAll = useCallback(() => {
     fetchIndices();
@@ -286,14 +296,16 @@ export default function StockDashboard() {
 
   useEffect(() => { if (hasKey) fetchAll(); }, [hasKey, fetchAll]);
   useEffect(() => {
-    if (auto && hasKey) timer.current = setInterval(fetchAll, 120000);
+    if (auto && hasKey) timer.current = setInterval(fetchAll, 300000); // 5분 (API 절약)
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [auto, hasKey, fetchAll]);
 
   const handleSaveKey = (newKey) => {
     setApiKey(newKey);
-    try { localStorage.setItem("fmp_api_key", newKey); } catch {}
+    try { localStorage.setItem("td_api_key", newKey); } catch {}
     setShowKeyInput(false);
+    setLoading(true);
+    setErr(null);
   };
 
   const thBase = {
@@ -316,7 +328,7 @@ export default function StockDashboard() {
             {hasKey && <button onClick={fetchAll} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline", fontSize: 13 }}>Refresh</button>}
             {hasKey && (
               <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} /> Auto-refresh 2min
+                <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} /> Auto-refresh 5min
               </label>
             )}
             <button onClick={() => setShowKeyInput(!showKeyInput)} style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 12 }}>
@@ -328,16 +340,40 @@ export default function StockDashboard() {
         {(!hasKey || showKeyInput) && (
           <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: 20, marginBottom: 20 }}>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e40af" }}>
-              {"\uD83D\uDD11"} FMP API Key Required
+              {"\uD83D\uDD11"} Twelve Data API Key Required
             </div>
             <p style={{ fontSize: 13, color: "#3b82f6", marginBottom: 12, lineHeight: 1.5 }}>
               Stock data is powered by{" "}
-              <a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>
-                Financial Modeling Prep
+              <a href="https://twelvedata.com/" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>
+                Twelve Data
               </a>{" "}
-              (free: 250 calls/day). Sign up and paste your API key below.
+              (free: 8 credits/min, 800/day). Sign up and paste your API key below.
             </p>
-            <ApiKeyForm currentKey={apiKey} onSave={handleSaveKey} />
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="text"
+                defaultValue={apiKey}
+                placeholder="Paste your Twelve Data API key here..."
+                onKeyDown={e => { if (e.key === "Enter") handleSaveKey(e.target.value.trim()); }}
+                id="td-key-input"
+                style={{
+                  flex: 1, padding: "10px 14px", border: "1px solid #d1d5db",
+                  borderRadius: 8, fontSize: 13, outline: "none", fontFamily: "monospace",
+                }}
+              />
+              <button
+                onClick={() => {
+                  const input = document.getElementById("td-key-input");
+                  if (input) handleSaveKey(input.value.trim());
+                }}
+                style={{
+                  padding: "10px 20px", background: "#2563eb", color: "#fff",
+                  border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                Save
+              </button>
+            </div>
           </div>
         )}
 
@@ -365,9 +401,8 @@ export default function StockDashboard() {
                     <tr>
                       <th style={{ ...thLeft, width: 36, textAlign: "center" }}>#</th>
                       <th style={{ ...thLeft, minWidth: 200 }}>Company</th>
-                      <th style={thBase}>Market Cap</th>
                       <th style={thBase}>Price</th>
-                      <th style={thBase}>24h</th>
+                      <th style={thBase}>Change</th>
                       <th style={thBase}>7D</th>
                       <th style={thBase}>30D</th>
                     </tr>
@@ -384,9 +419,8 @@ export default function StockDashboard() {
                             <div style={{ fontSize: 11, color: "#9ca3af" }}>{r.symbol}</div>
                           </div>
                         </td>
-                        <td style={tdR}>{fmtMcap(r.marketCap)}</td>
                         <td style={{ ...tdR, fontWeight: 700, color: "#111", fontSize: 14 }}>{fmtPrice(r.price)}</td>
-                        <PctCell value={r.change24h} />
+                        <PctCell value={r.changePct} />
                         <PctCell value={r.change7d} />
                         <PctCell value={r.change30d} />
                       </tr>
@@ -397,39 +431,11 @@ export default function StockDashboard() {
             )}
 
             <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
-              Data: Financial Modeling Prep API &middot; Auto-refresh 2min &middot; Global Top 20 by Market Cap
+              Data: Twelve Data API &middot; Auto-refresh 5min &middot; Global Top 20 by Market Cap
             </div>
           </>
         )}
       </div>
-    </div>
-  );
-}
-
-function ApiKeyForm({ currentKey, onSave }) {
-  const [value, setValue] = useState(currentKey || "");
-  return (
-    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-      <input
-        type="text"
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        placeholder="Paste your FMP API key here..."
-        style={{
-          flex: 1, padding: "10px 14px", border: "1px solid #d1d5db",
-          borderRadius: 8, fontSize: 13, outline: "none", fontFamily: "monospace",
-        }}
-      />
-      <button
-        onClick={() => onSave(value.trim())}
-        style={{
-          padding: "10px 20px", background: "#2563eb", color: "#fff",
-          border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Save
-      </button>
     </div>
   );
 }
