@@ -5,28 +5,24 @@ import React from "react";
  * ══════════════════════════════════════════════════════════════
  *  FMP (Financial Modeling Prep) API — 무료 250 calls/day
  *  가입: https://site.financialmodelingprep.com/developer/docs
- *  아래 API_KEY를 본인 키로 교체하세요
+ *  /stable/ 엔드포인트 사용 (2025-08 이후 신규 가입자 필수)
  * ══════════════════════════════════════════════════════════════
  */
 const API_KEY = "YOUR_FMP_API_KEY";
-const FMP = "https://financialmodelingprep.com/api/stable";
+const FMP = "https://financialmodelingprep.com/stable";
 
 /* ── 상단 배너 지수 목록 ── */
 const INDICES = [
-  // 🇺🇸 US
-  { symbol: "^DJI",    name: "Dow Jones",  flag: "🇺🇸", group: "US" },
-  { symbol: "^GSPC",   name: "S&P 500",    flag: "🇺🇸", group: "US" },
-  { symbol: "^IXIC",   name: "Nasdaq",     flag: "🇺🇸", group: "US" },
-  // 🇺🇸 US Futures
-  { symbol: "YM=F",    name: "Dow Futures",    flag: "🇺🇸", group: "US Futures" },
-  { symbol: "ES=F",    name: "S&P Futures",    flag: "🇺🇸", group: "US Futures" },
-  { symbol: "NQ=F",    name: "Nasdaq Futures",  flag: "🇺🇸", group: "US Futures" },
-  // 🇨🇳 China
-  { symbol: "399001.SZ", name: "Shenzhen",   flag: "🇨🇳", group: "China" },
-  { symbol: "^HSI",      name: "Hang Seng",  flag: "🇭🇰", group: "China" },
-  // 🇰🇷 Korea
-  { symbol: "^KS11",   name: "KOSPI",      flag: "🇰🇷", group: "Korea" },
-  { symbol: "^KQ11",   name: "KOSDAQ",     flag: "🇰🇷", group: "Korea" },
+  { symbol: "^DJI",      name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "^GSPC",     name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "^IXIC",     name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "YM=F",      name: "Dow Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "ES=F",      name: "S&P Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "NQ=F",      name: "Nasdaq Futures", flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "399001.SZ", name: "Shenzhen",       flag: "\u{1F1E8}\u{1F1F3}", group: "China" },
+  { symbol: "^HSI",      name: "Hang Seng",      flag: "\u{1F1ED}\u{1F1F0}", group: "China" },
+  { symbol: "^KS11",     name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+  { symbol: "^KQ11",     name: "KOSDAQ",         flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
 ];
 
 /* ── 글로벌 시총 Top 20 종목 (2026-02 기준) ── */
@@ -79,9 +75,9 @@ function fmtPct(v) {
 
 /* ── Index Card Component ── */
 function IndexCard({ data, meta }) {
-  const price = data?.price ?? data?.changesPercentage != null ? data?.price : null;
-  const change = data?.change;
-  const changePct = data?.changesPercentage;
+  const price = data?.price ?? null;
+  const change = data?.change ?? null;
+  const changePct = data?.changesPercentage ?? null;
   const pos = (change ?? 0) >= 0;
   const color = pos ? "#16a34a" : "#dc2626";
   const bgColor = pos ? "rgba(22,163,74,0.06)" : "rgba(220,38,38,0.06)";
@@ -172,9 +168,8 @@ export default function StockDashboard() {
   const fetchIndices = useCallback(async () => {
     if (!hasKey) return;
     try {
-      // 지수는 encode 필요 (^, = 등 특수문자)
       const symbols = INDICES.map(i => encodeURIComponent(i.symbol)).join(",");
-  const res = await fetch(FMP + "/quote?symbol=" + symbols + "&apikey=" + key);
+      const res = await fetch(FMP + "/quote?symbol=" + symbols + "&apikey=" + key);
       const json = await res.json();
       if (Array.isArray(json)) {
         const map = {};
@@ -185,15 +180,14 @@ export default function StockDashboard() {
   }, [hasKey, key]);
 
   /* ── Fetch stock quotes ── */
-const fetchStocks = useCallback(async () => {
+  const fetchStocks = useCallback(async () => {
     if (!hasKey) { setLoading(false); return; }
     try {
       setErr(null);
       const symbols = TOP_STOCKS.map(s => s.symbol).join(",");
-      const res = await fetch(FMP + "/quote/" + symbols + "?apikey=" + key);
+      const res = await fetch(FMP + "/quote?symbol=" + symbols + "&apikey=" + key);
       const json = await res.json();
 
-      // FMP returns { "Error Message": "..." } for invalid keys
       if (json["Error Message"]) {
         setErr("FMP API: " + json["Error Message"]);
         setLoading(false);
@@ -232,22 +226,20 @@ const fetchStocks = useCallback(async () => {
     if (!hasKey) return;
     try {
       const today = new Date();
-      const d7 = new Date(today); d7.setDate(d7.getDate() - 7);
       const d30 = new Date(today); d30.setDate(d30.getDate() - 30);
       const fmt = d => d.toISOString().slice(0, 10);
 
-      // Use batch historical endpoint for each stock
       const symbols = rows.map(r => r.symbol);
 
-      // Fetch 30-day historical for all stocks (includes 7d data)
       const histPromises = symbols.map(async (sym) => {
         try {
           const res = await fetch(
-    FMP + "/historical-price-eod/full?symbol=" + sym + "&from=" + fmt(d30) + "&to=" + fmt(today) + "&apikey=" + key
-  );
+            FMP + "/historical-price-eod/full?symbol=" + encodeURIComponent(sym) +
+            "&from=" + fmt(d30) + "&to=" + fmt(today) + "&apikey=" + key
+          );
           if (!res.ok) return { symbol: sym, data: [] };
           const json = await res.json();
-          return { symbol: sym, data: json.historical || [] };
+          return { symbol: sym, data: json.historical || json || [] };
         } catch { return { symbol: sym, data: [] }; }
       });
 
@@ -256,20 +248,17 @@ const fetchStocks = useCallback(async () => {
       setStockRows(prev => {
         const updated = [...prev];
         for (const { symbol, data } of results) {
-          if (data.length === 0) continue;
+          if (!Array.isArray(data) || data.length === 0) continue;
           const row = updated.find(r => r.symbol === symbol);
           if (!row) continue;
 
           const currentPrice = row.price;
-          // data is sorted newest first
           const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-          // Find price ~7 days ago
           const d7target = new Date(today); d7target.setDate(d7target.getDate() - 7);
           const price7d = findClosestPrice(sorted, d7target);
           if (price7d && currentPrice) row.change7d = ((currentPrice - price7d) / price7d) * 100;
 
-          // Find price ~30 days ago
           const d30target = new Date(today); d30target.setDate(d30target.getDate() - 30);
           const price30d = findClosestPrice(sorted, d30target);
           if (price30d && currentPrice) row.change30d = ((currentPrice - price30d) / price30d) * 100;
@@ -297,7 +286,7 @@ const fetchStocks = useCallback(async () => {
 
   useEffect(() => { if (hasKey) fetchAll(); }, [hasKey, fetchAll]);
   useEffect(() => {
-    if (auto && hasKey) timer.current = setInterval(fetchAll, 120000); // 2분 (API 절약)
+    if (auto && hasKey) timer.current = setInterval(fetchAll, 120000);
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [auto, hasKey, fetchAll]);
 
@@ -318,10 +307,9 @@ const fetchStocks = useCallback(async () => {
     <div style={{ minHeight: "100vh", background: "#fff", color: "#111", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "24px 16px" }}>
 
-        {/* Header */}
         <div style={{ marginBottom: 16 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 28 }}>📊</span> Stock Dashboard
+            <span style={{ fontSize: 28 }}>{"\uD83D\uDCCA"}</span> Stock Dashboard
           </h1>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 13, color: "#6b7280" }}>
             {updated && <span>Last updated: {updated.toLocaleTimeString("en-US")}</span>}
@@ -332,23 +320,22 @@ const fetchStocks = useCallback(async () => {
               </label>
             )}
             <button onClick={() => setShowKeyInput(!showKeyInput)} style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 12 }}>
-              ⚙️ API Key
+              {"\u2699\uFE0F"} API Key
             </button>
           </div>
         </div>
 
-        {/* API Key Input */}
         {(!hasKey || showKeyInput) && (
-          <div style={{
-            background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12,
-            padding: 20, marginBottom: 20,
-          }}>
+          <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: 20, marginBottom: 20 }}>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e40af" }}>
-              🔑 FMP API Key Required
+              {"\uD83D\uDD11"} FMP API Key Required
             </div>
             <p style={{ fontSize: 13, color: "#3b82f6", marginBottom: 12, lineHeight: 1.5 }}>
-              Stock data is powered by <a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>Financial Modeling Prep</a> (free: 250 calls/day).
-              Sign up and paste your API key below.
+              Stock data is powered by{" "}
+              <a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>
+                Financial Modeling Prep
+              </a>{" "}
+              (free: 250 calls/day). Sign up and paste your API key below.
             </p>
             <ApiKeyForm currentKey={apiKey} onSave={handleSaveKey} />
           </div>
@@ -356,17 +343,18 @@ const fetchStocks = useCallback(async () => {
 
         {hasKey && (
           <>
-            {/* Index Banner */}
             <IndexBanner indexData={indexData} />
 
-            {/* Error */}
-            {err && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: 12, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>{err}</div>}
+            {err && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: 12, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>
+                {err}
+              </div>
+            )}
 
-            {/* Stock Table */}
             {loading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#9ca3af" }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>📡</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>{"\uD83D\uDCE1"}</div>
                   <p>Loading stock data...</p>
                 </div>
               </div>
@@ -418,7 +406,6 @@ const fetchStocks = useCallback(async () => {
   );
 }
 
-/* ── API Key Form Component ── */
 function ApiKeyForm({ currentKey, onSave }) {
   const [value, setValue] = useState(currentKey || "");
   return (
