@@ -204,10 +204,7 @@ const fetchStocks = useCallback(async () => {
         setLoading(false);
         return;
       }
-      const json = await res.json();
 
-      /* FMP /quote gives: price, marketCap, changesPercentage (24h) 
-         For 7D and 30D, we need historical data */
       const rows = json.map(item => {
         const meta = TOP_STOCKS.find(s => s.symbol === item.symbol);
         return {
@@ -221,13 +218,11 @@ const fetchStocks = useCallback(async () => {
         };
       });
 
-      // Sort by market cap descending
       rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
       setStockRows(rows);
       setUpdated(new Date());
       setLoading(false);
 
-      // Fetch 7D and 30D changes in background
       fetchHistoricalChanges(rows);
     } catch (e) { setErr(e.message); setLoading(false); }
   }, [hasKey, key]);
