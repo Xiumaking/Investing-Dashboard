@@ -172,17 +172,11 @@ export default function StockDashboard() {
   const fetchIndices = useCallback(async () => {
     if (!hasKey) return;
     try {
-      // FMP uses different symbols for some indices
-      const symbolMap = {
-        "^DJI": "^DJI", "^GSPC": "^GSPC", "^IXIC": "^IXIC",
-        "YM=F": "YM=F", "ES=F": "ES=F", "NQ=F": "NQ=F",
-        "399001.SZ": "399001.SZ", "^HSI": "^HSI",
-        "^KS11": "^KS11", "^KQ11": "^KQ11",
-      };
-      const symbols = INDICES.map(i => i.symbol).join(",");
+      // 지수는 encode 필요 (^, = 등 특수문자)
+      const symbols = INDICES.map(i => encodeURIComponent(i.symbol)).join(",");
       const res = await fetch(FMP + "/quote/" + symbols + "?apikey=" + key);
-      if (res.ok) {
-        const json = await res.json();
+      const json = await res.json();
+      if (Array.isArray(json)) {
         const map = {};
         json.forEach(item => { map[item.symbol] = item; });
         setIndexData(map);
@@ -191,18 +185,22 @@ export default function StockDashboard() {
   }, [hasKey, key]);
 
   /* ── Fetch stock quotes ── */
-  const fetchStocks = useCallback(async () => {
+const fetchStocks = useCallback(async () => {
     if (!hasKey) { setLoading(false); return; }
     try {
       setErr(null);
       const symbols = TOP_STOCKS.map(s => s.symbol).join(",");
       const res = await fetch(FMP + "/quote/" + symbols + "?apikey=" + key);
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          setErr("Invalid API key. Please check your FMP API key.");
-        } else {
-          setErr("API Error: " + res.status);
-        }
+      const json = await res.json();
+
+      // FMP returns { "Error Message": "..." } for invalid keys
+      if (json["Error Message"]) {
+        setErr("FMP API: " + json["Error Message"]);
+        setLoading(false);
+        return;
+      }
+      if (!Array.isArray(json) || json.length === 0) {
+        setErr("No data returned. Check API key or plan limits.");
         setLoading(false);
         return;
       }
