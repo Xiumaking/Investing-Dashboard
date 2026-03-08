@@ -3,22 +3,29 @@ import React from "react";
 
 /*
  * ══════════════════════════════════════════════════════════════
- *  Finnhub API — 무료 60 calls/min, CORS 지원
- *  가입: https://finnhub.io/ → Get Free API Key
- *  /quote: 개별 종목 실시간 가격
- *  /stock/candle: 히스토리컬 데이터 (7D/30D 변동률 계산)
+ *  Stock Dashboard — Yahoo Finance via Vercel Serverless Proxy
+ *  API Key 불필요, CORS 문제 없음, 무료
+ *  /api/stocks?type=quote&symbols=... → batch quote
+ *  /api/stocks?type=history&symbol=...&range=1mo → OHLCV
  * ══════════════════════════════════════════════════════════════
  */
-const FH = "https://finnhub.io/api/v1";
 
-/* ── 상단 배너 지수 ETF (Finnhub은 지수 직접 지원 안 함 → ETF로 대체) ── */
-const INDEX_ETFS = [
-  { symbol: "DIA",  name: "Dow Jones",    flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "SPY",  name: "S&P 500",      flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "QQQ",  name: "Nasdaq 100",   flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "EWY",  name: "KOSPI (ETF)",  flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
-  { symbol: "FXI",  name: "China (ETF)",  flag: "\u{1F1E8}\u{1F1F3}", group: "Asia" },
-  { symbol: "EWH",  name: "HK (ETF)",     flag: "\u{1F1ED}\u{1F1F0}", group: "Asia" },
+/* ── 상단 배너 지수 목록 (Yahoo Finance 심볼) ── */
+const INDICES = [
+  // US Spot
+  { symbol: "^DJI",   name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
+  { symbol: "^GSPC",  name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
+  { symbol: "^IXIC",  name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
+  // US Futures
+  { symbol: "YM=F",   name: "Dow Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "ES=F",   name: "S&P Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "NQ=F",   name: "Nasdaq Futures", flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  // China
+  { symbol: "399001.SZ", name: "Shenzhen Comp", flag: "\u{1F1E8}\u{1F1F3}", group: "China" },
+  { symbol: "^HSI",      name: "Hang Seng",     flag: "\u{1F1ED}\u{1F1F0}", group: "China" },
+  // Korea
+  { symbol: "^KS11",  name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+  { symbol: "^KQ11",  name: "KOSDAQ",         flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
 ];
 
 /* ── 글로벌 시총 Top 20 종목 (2026-02 기준) ── */
@@ -31,7 +38,7 @@ const TOP_STOCKS = [
   { symbol: "META",  name: "Meta Platforms" },
   { symbol: "TSLA",  name: "Tesla" },
   { symbol: "TSM",   name: "TSMC" },
-  { symbol: "BRK.B", name: "Berkshire Hathaway" },
+  { symbol: "BRK-B", name: "Berkshire Hathaway" },
   { symbol: "AVGO",  name: "Broadcom" },
   { symbol: "LLY",   name: "Eli Lilly" },
   { symbol: "WMT",   name: "Walmart" },
@@ -42,7 +49,7 @@ const TOP_STOCKS = [
   { symbol: "XOM",   name: "Exxon Mobil" },
   { symbol: "COST",  name: "Costco" },
   { symbol: "JNJ",   name: "Johnson & Johnson" },
-  { symbol: "ASML",  name: "ASML Holdings" },
+  { symbol: "ASML",  name: "ASML" },
 ];
 
 /* ── Format helpers ── */
@@ -52,6 +59,17 @@ function fmtPrice(p) {
   if (Math.abs(p) >= 1) return "$" + p.toFixed(2);
   return "$" + p.toFixed(4);
 }
+function fmtIdx(p) {
+  if (p == null) return "\u2014";
+  return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtMcap(m) {
+  if (m == null) return "\u2014";
+  if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T";
+  if (m >= 1e9) return "$" + (m / 1e9).toFixed(2) + "B";
+  if (m >= 1e6) return "$" + (m / 1e6).toFixed(1) + "M";
+  return "$" + m.toLocaleString();
+}
 function fmtPct(v) {
   if (v == null) return "\u2014";
   const s = v >= 0 ? "+" : "";
@@ -59,10 +77,10 @@ function fmtPct(v) {
 }
 
 /* ── Index Card ── */
-function IndexCard({ data, meta }) {
-  const price = data?.c || null;
-  const change = data?.d || null;
-  const changePct = data?.dp || null;
+function IndexCard({ data }) {
+  const price = data?.regularMarketPrice ?? null;
+  const change = data?.regularMarketChange ?? null;
+  const changePct = data?.regularMarketChangePercent ?? null;
   const pos = (change ?? 0) >= 0;
   const color = pos ? "#16a34a" : "#dc2626";
   const bgColor = pos ? "rgba(22,163,74,0.06)" : "rgba(220,38,38,0.06)";
@@ -70,14 +88,14 @@ function IndexCard({ data, meta }) {
   return (
     <div style={{
       background: bgColor, border: "1px solid " + (pos ? "rgba(22,163,74,0.15)" : "rgba(220,38,38,0.15)"),
-      borderRadius: 10, padding: "10px 14px", minWidth: 145, flex: "1 1 145px",
+      borderRadius: 10, padding: "10px 14px", minWidth: 150, flex: "1 1 150px",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-        <span style={{ fontSize: 14 }}>{meta.flag}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280" }}>{meta.name}</span>
+        <span style={{ fontSize: 14 }}>{data?.flag}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280" }}>{data?.label || data?.shortName || data?.symbol}</span>
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: "#111" }}>
-        {price ? price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "\u2014"}
+        {price != null ? fmtIdx(price) : "\u2014"}
       </div>
       <div style={{ fontSize: 12, fontWeight: 600, color, marginTop: 2 }}>
         {change != null ? (pos ? "+" : "") + change.toFixed(2) : ""}{" "}
@@ -88,12 +106,14 @@ function IndexCard({ data, meta }) {
 }
 
 /* ── Index Banner ── */
-function IndexBanner({ indexData }) {
+function IndexBanner({ indexQuotes }) {
   const groups = {};
-  INDEX_ETFS.forEach(idx => {
+  INDICES.forEach(idx => {
+    const data = indexQuotes[idx.symbol];
     if (!groups[idx.group]) groups[idx.group] = [];
-    groups[idx.group].push(idx);
+    groups[idx.group].push({ ...idx, ...(data || {}), label: idx.name, flag: idx.flag });
   });
+
   return (
     <div style={{ marginBottom: 24 }}>
       {Object.entries(groups).map(([groupName, items]) => (
@@ -102,8 +122,8 @@ function IndexBanner({ indexData }) {
             {groupName}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {items.map(meta => (
-              <IndexCard key={meta.symbol} meta={meta} data={indexData[meta.symbol]} />
+            {items.map(item => (
+              <IndexCard key={item.symbol} data={item} />
             ))}
           </div>
         </div>
@@ -131,155 +151,131 @@ function PctCell({ value }) {
 
 const tdR = { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" };
 
-/* ── Helper: sequential fetch with delay ── */
-async function fetchSequential(urls, delayMs = 100) {
-  const results = [];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url);
-      const json = await res.json();
-      results.push(json);
-    } catch {
-      results.push(null);
-    }
-    if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
-  }
-  return results;
-}
-
 /* ── Main Stock Dashboard ── */
 export default function StockDashboard() {
-  const [indexData, setIndexData] = useState({});
+  const [indexQuotes, setIndexQuotes] = useState({});
   const [stockRows, setStockRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
   const [updated, setUpdated] = useState(null);
   const [auto, setAuto] = useState(true);
-  const [apiKey, setApiKey] = useState(() => {
-    try { return localStorage.getItem("fh_api_key") || ""; } catch { return ""; }
-  });
-  const [showKeyInput, setShowKeyInput] = useState(false);
   const timer = useRef(null);
-  const fetchingRef = useRef(false);
 
-  const hasKey = apiKey && apiKey.length > 5;
-
-  /* ── Fetch all index ETF quotes (6 calls) ── */
-  const fetchIndices = useCallback(async () => {
-    if (!hasKey) return;
-    const urls = INDEX_ETFS.map(i => FH + "/quote?symbol=" + i.symbol + "&token=" + apiKey);
-    const results = await fetchSequential(urls, 50);
-    const map = {};
-    INDEX_ETFS.forEach((meta, i) => {
-      if (results[i] && results[i].c) map[meta.symbol] = results[i];
-    });
-    setIndexData(map);
-  }, [hasKey, apiKey]);
-
-  /* ── Fetch all stock quotes (20 calls) ── */
-  const fetchStocks = useCallback(async () => {
-    if (!hasKey) { setLoading(false); return; }
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-
+  /* ── Fetch everything in 1 batch call ── */
+  const fetchAll = useCallback(async () => {
     try {
       setErr(null);
-      const urls = TOP_STOCKS.map(s => FH + "/quote?symbol=" + s.symbol + "&token=" + apiKey);
-      const results = await fetchSequential(urls, 80);
 
-      // Check first result for auth error
-      if (results[0] && results[0].error) {
-        setErr("Finnhub API: " + results[0].error);
+      // Combine all symbols into ONE request
+      const allSymbols = [
+        ...INDICES.map(i => i.symbol),
+        ...TOP_STOCKS.map(s => s.symbol),
+      ].join(",");
+
+      const res = await fetch("/api/stocks?type=quote&symbols=" + encodeURIComponent(allSymbols));
+      const json = await res.json();
+
+      const quotes = json?.quoteResponse?.result || [];
+      if (quotes.length === 0) {
+        setErr("No data returned. The API may be temporarily unavailable.");
         setLoading(false);
-        fetchingRef.current = false;
         return;
       }
 
-      const rows = TOP_STOCKS.map((meta, i) => {
-        const q = results[i];
-        if (!q || !q.c) return { symbol: meta.symbol, name: meta.name, price: null, changePct: null, change7d: null, change30d: null };
-        return {
-          symbol: meta.symbol,
-          name: meta.name,
-          price: q.c,           // current price
-          prevClose: q.pc,      // previous close
-          changePct: q.dp,      // daily change %
-          high: q.h,
-          low: q.l,
+      // Build index map
+      const idxMap = {};
+      const indexSymbols = new Set(INDICES.map(i => i.symbol));
+      quotes.forEach(q => {
+        if (indexSymbols.has(q.symbol)) idxMap[q.symbol] = q;
+      });
+      setIndexQuotes(idxMap);
+
+      // Build stock rows
+      const stockSymbols = new Set(TOP_STOCKS.map(s => s.symbol));
+      const rows = [];
+      quotes.forEach(q => {
+        if (!stockSymbols.has(q.symbol)) return;
+        const meta = TOP_STOCKS.find(s => s.symbol === q.symbol);
+        rows.push({
+          symbol: q.symbol,
+          name: meta?.name || q.shortName || q.symbol,
+          price: q.regularMarketPrice,
+          marketCap: q.marketCap,
+          changePct: q.regularMarketChangePercent,
           change7d: null,
           change30d: null,
-        };
+        });
       });
 
+      // Sort by market cap (descending)
+      rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
       setStockRows(rows);
       setUpdated(new Date());
       setLoading(false);
 
-      // Fetch 7D/30D in background (needs candle data)
-      // Wait 5 seconds to avoid rate limit, then fetch
-      setTimeout(() => fetchHistorical(rows), 5000);
+      // Fetch 7D/30D changes in background
+      fetchHistorical(rows);
     } catch (e) {
-      setErr(e.message);
+      setErr("Failed to fetch: " + e.message);
       setLoading(false);
     }
-    fetchingRef.current = false;
-  }, [hasKey, apiKey]);
+  }, []);
 
-  /* ── Fetch 30D candle data for 7D/30D change ── */
+  /* ── Fetch 1mo history for each stock to calc 7D/30D ── */
   const fetchHistorical = useCallback(async (rows) => {
-    if (!hasKey) return;
-    const now = Math.floor(Date.now() / 1000);
-    const d30ago = now - 30 * 86400;
+    try {
+      // Fetch all in parallel — each goes through our serverless proxy
+      const promises = rows.map(async (r) => {
+        try {
+          const res = await fetch("/api/stocks?type=history&symbol=" + encodeURIComponent(r.symbol) + "&range=1mo");
+          const json = await res.json();
+          const result = json?.chart?.result?.[0];
+          if (!result) return { symbol: r.symbol };
 
-    const urls = rows.map(r =>
-      FH + "/stock/candle?symbol=" + r.symbol + "&resolution=D&from=" + d30ago + "&to=" + now + "&token=" + apiKey
-    );
-
-    // Fetch with 100ms delay between each (20 calls over ~2s)
-    const results = await fetchSequential(urls, 100);
-
-    setStockRows(prev => {
-      const updated = [...prev];
-      results.forEach((candle, i) => {
-        if (!candle || candle.s !== "ok" || !candle.c || candle.c.length < 2) return;
-        const row = updated[i];
-        if (!row || !row.price) return;
-
-        const closes = candle.c;
-        const currentPrice = row.price;
-
-        // 7D: ~5 trading days from end
-        if (closes.length >= 6) {
-          const p7d = closes[closes.length - 6];
-          if (p7d) row.change7d = ((currentPrice - p7d) / p7d) * 100;
+          const closes = result.indicators?.quote?.[0]?.close || [];
+          const timestamps = result.timestamp || [];
+          return { symbol: r.symbol, closes, timestamps };
+        } catch {
+          return { symbol: r.symbol };
         }
-
-        // 30D: first close in the array
-        const p30d = closes[0];
-        if (p30d) row.change30d = ((currentPrice - p30d) / p30d) * 100;
       });
-      return updated;
-    });
-  }, [hasKey, apiKey]);
 
-  const fetchAll = useCallback(() => {
-    fetchIndices();
-    fetchStocks();
-  }, [fetchIndices, fetchStocks]);
+      const results = await Promise.all(promises);
 
-  useEffect(() => { if (hasKey) fetchAll(); }, [hasKey]);
+      setStockRows(prev => {
+        const updated = [...prev];
+        const now = Date.now() / 1000;
+
+        for (const { symbol, closes, timestamps } of results) {
+          if (!closes || !timestamps || closes.length < 2) continue;
+          const row = updated.find(r => r.symbol === symbol);
+          if (!row || !row.price) continue;
+
+          const currentPrice = row.price;
+
+          // Find price ~7 days ago
+          const t7d = now - 7 * 86400;
+          let price7d = null;
+          for (let i = timestamps.length - 1; i >= 0; i--) {
+            if (timestamps[i] <= t7d) { price7d = closes[i]; break; }
+          }
+          if (!price7d && closes.length >= 6) price7d = closes[closes.length - 6];
+          if (price7d) row.change7d = ((currentPrice - price7d) / price7d) * 100;
+
+          // Find price ~30 days ago (first in array)
+          const price30d = closes[0];
+          if (price30d) row.change30d = ((currentPrice - price30d) / price30d) * 100;
+        }
+        return updated;
+      });
+    } catch (e) { /* silent */ }
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
   useEffect(() => {
-    if (auto && hasKey) timer.current = setInterval(() => { fetchIndices(); fetchStocks(); }, 300000);
+    if (auto) timer.current = setInterval(fetchAll, 120000); // 2min
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [auto, hasKey, fetchIndices, fetchStocks]);
-
-  const handleSaveKey = (newKey) => {
-    setApiKey(newKey);
-    try { localStorage.setItem("fh_api_key", newKey); } catch {}
-    setShowKeyInput(false);
-    setLoading(true);
-    setErr(null);
-  };
+  }, [auto, fetchAll]);
 
   const thBase = {
     padding: "10px 8px", textAlign: "right", fontSize: 11, color: "#6b7280",
@@ -298,116 +294,69 @@ export default function StockDashboard() {
           </h1>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 13, color: "#6b7280" }}>
             {updated && <span>Last updated: {updated.toLocaleTimeString("en-US")}</span>}
-            {hasKey && <button onClick={fetchAll} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline", fontSize: 13 }}>Refresh</button>}
-            {hasKey && (
-              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} /> Auto-refresh 5min
-              </label>
-            )}
-            <button onClick={() => setShowKeyInput(!showKeyInput)} style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 12 }}>
-              {"\u2699\uFE0F"} API Key
-            </button>
+            <button onClick={fetchAll} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline", fontSize: 13 }}>Refresh</button>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} /> Auto-refresh 2min
+            </label>
           </div>
         </div>
 
-        {(!hasKey || showKeyInput) && (
-          <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e40af" }}>
-              {"\uD83D\uDD11"} Finnhub API Key Required
-            </div>
-            <p style={{ fontSize: 13, color: "#3b82f6", marginBottom: 12, lineHeight: 1.5 }}>
-              Stock data is powered by{" "}
-              <a href="https://finnhub.io/" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>
-                Finnhub
-              </a>{" "}
-              (free: 60 calls/min). Sign up and paste your API key below.
-            </p>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                type="text"
-                defaultValue={apiKey}
-                placeholder="Paste your Finnhub API key here..."
-                onKeyDown={e => { if (e.key === "Enter") handleSaveKey(e.target.value.trim()); }}
-                id="fh-key-input"
-                style={{
-                  flex: 1, padding: "10px 14px", border: "1px solid #d1d5db",
-                  borderRadius: 8, fontSize: 13, outline: "none", fontFamily: "monospace",
-                }}
-              />
-              <button
-                onClick={() => {
-                  const input = document.getElementById("fh-key-input");
-                  if (input) handleSaveKey(input.value.trim());
-                }}
-                style={{
-                  padding: "10px 20px", background: "#2563eb", color: "#fff",
-                  border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                }}
-              >
-                Save
-              </button>
-            </div>
+        <IndexBanner indexQuotes={indexQuotes} />
+
+        {err && (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: 12, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>
+            {err}
           </div>
         )}
 
-        {hasKey && (
-          <>
-            <IndexBanner indexData={indexData} />
-
-            {err && (
-              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: 12, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>
-                {err}
-              </div>
-            )}
-
-            {loading ? (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#9ca3af" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>{"\uD83D\uDCE1"}</div>
-                  <p>Loading stock data...</p>
-                </div>
-              </div>
-            ) : (
-              <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #e5e7eb" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 650, background: "#fff" }}>
-                  <thead>
-                    <tr>
-                      <th style={{ ...thLeft, width: 36, textAlign: "center" }}>#</th>
-                      <th style={{ ...thLeft, minWidth: 200 }}>Company</th>
-                      <th style={thBase}>Price</th>
-                      <th style={thBase}>Daily</th>
-                      <th style={thBase}>7D</th>
-                      <th style={thBase}>30D</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stockRows.map((r, idx) => (
-                      <tr key={r.symbol} style={{ borderBottom: "1px solid #f3f4f6", transition: "background .15s" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
-                        onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
-                        <td style={{ padding: "12px 8px", textAlign: "center", fontSize: 12, color: "#9ca3af" }}>{idx + 1}</td>
-                        <td style={{ padding: "12px 8px" }}>
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: 14, color: "#111" }}>{r.name}</div>
-                            <div style={{ fontSize: 11, color: "#9ca3af" }}>{r.symbol}</div>
-                          </div>
-                        </td>
-                        <td style={{ ...tdR, fontWeight: 700, color: "#111", fontSize: 14 }}>{fmtPrice(r.price)}</td>
-                        <PctCell value={r.changePct} />
-                        <PctCell value={r.change7d} />
-                        <PctCell value={r.change30d} />
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
-              Data: Finnhub API &middot; Auto-refresh 5min &middot; Global Top 20 by Market Cap
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#9ca3af" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>{"\uD83D\uDCE1"}</div>
+              <p>Loading stock data...</p>
             </div>
-          </>
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #e5e7eb" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700, background: "#fff" }}>
+              <thead>
+                <tr>
+                  <th style={{ ...thLeft, width: 36, textAlign: "center" }}>#</th>
+                  <th style={{ ...thLeft, minWidth: 200 }}>Company</th>
+                  <th style={thBase}>Market Cap</th>
+                  <th style={thBase}>Price</th>
+                  <th style={thBase}>Daily</th>
+                  <th style={thBase}>7D</th>
+                  <th style={thBase}>30D</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stockRows.map((r, idx) => (
+                  <tr key={r.symbol} style={{ borderBottom: "1px solid #f3f4f6", transition: "background .15s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
+                    <td style={{ padding: "12px 8px", textAlign: "center", fontSize: 12, color: "#9ca3af" }}>{idx + 1}</td>
+                    <td style={{ padding: "12px 8px" }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "#111" }}>{r.name}</div>
+                        <div style={{ fontSize: 11, color: "#9ca3af" }}>{r.symbol}</div>
+                      </div>
+                    </td>
+                    <td style={tdR}>{fmtMcap(r.marketCap)}</td>
+                    <td style={{ ...tdR, fontWeight: 700, color: "#111", fontSize: 14 }}>{fmtPrice(r.price)}</td>
+                    <PctCell value={r.changePct} />
+                    <PctCell value={r.change7d} />
+                    <PctCell value={r.change30d} />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
+
+        <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
+          Data: Yahoo Finance &middot; Auto-refresh 2min &middot; Global Top 20 by Market Cap &middot; No API key required
+        </div>
       </div>
     </div>
   );
