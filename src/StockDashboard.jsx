@@ -3,51 +3,54 @@ import React from "react";
 
 /*
  * ══════════════════════════════════════════════════════════════
- *  Twelve Data API — 무료 8 credits/min, 800/day
- *  가입: https://twelvedata.com/ (Google 로그인 가능)
- *  Dashboard에서 API Key 복사
+ *  Finnhub API — 무료 60 calls/min, CORS 지원
+ *  가입: https://finnhub.io/ → Get Free API Key
+ *  /quote: 개별 종목 실시간 가격
+ *  /stock/candle: 히스토리컬 데이터 (7D/30D 변동률 계산)
  * ══════════════════════════════════════════════════════════════
  */
-const TD = "https://api.twelvedata.com";
+const FH = "https://finnhub.io/api/v1";
 
-/* ── 상단 배너 지수 목록 ── */
-const INDICES = [
-  { symbol: "DJI",    name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "SPX",    name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "IXIC",   name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
-  { symbol: "HSI",    name: "Hang Seng",      flag: "\u{1F1ED}\u{1F1F0}", group: "Asia" },
-  { symbol: "KOSPI",  name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+/* ── 상단 배너 지수 ETF (Finnhub은 지수 직접 지원 안 함 → ETF로 대체) ── */
+const INDEX_ETFS = [
+  { symbol: "DIA",  name: "Dow Jones",    flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "SPY",  name: "S&P 500",      flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "QQQ",  name: "Nasdaq 100",   flag: "\u{1F1FA}\u{1F1F8}", group: "US" },
+  { symbol: "EWY",  name: "KOSPI (ETF)",  flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+  { symbol: "FXI",  name: "China (ETF)",  flag: "\u{1F1E8}\u{1F1F3}", group: "Asia" },
+  { symbol: "EWH",  name: "HK (ETF)",     flag: "\u{1F1ED}\u{1F1F0}", group: "Asia" },
 ];
 
 /* ── 글로벌 시총 Top 20 종목 (2026-02 기준) ── */
 const TOP_STOCKS = [
-  "NVDA", "AAPL", "GOOGL", "MSFT", "AMZN",
-  "META", "TSLA", "TSM", "BRK.B", "AVGO",
-  "LLY", "WMT", "JPM", "V", "MA",
-  "UNH", "XOM", "COST", "JNJ", "ASML",
+  { symbol: "NVDA",  name: "NVIDIA" },
+  { symbol: "AAPL",  name: "Apple" },
+  { symbol: "GOOGL", name: "Alphabet" },
+  { symbol: "MSFT",  name: "Microsoft" },
+  { symbol: "AMZN",  name: "Amazon" },
+  { symbol: "META",  name: "Meta Platforms" },
+  { symbol: "TSLA",  name: "Tesla" },
+  { symbol: "TSM",   name: "TSMC" },
+  { symbol: "BRK.B", name: "Berkshire Hathaway" },
+  { symbol: "AVGO",  name: "Broadcom" },
+  { symbol: "LLY",   name: "Eli Lilly" },
+  { symbol: "WMT",   name: "Walmart" },
+  { symbol: "JPM",   name: "JPMorgan Chase" },
+  { symbol: "V",     name: "Visa" },
+  { symbol: "MA",    name: "Mastercard" },
+  { symbol: "UNH",   name: "UnitedHealth" },
+  { symbol: "XOM",   name: "Exxon Mobil" },
+  { symbol: "COST",  name: "Costco" },
+  { symbol: "JNJ",   name: "Johnson & Johnson" },
+  { symbol: "ASML",  name: "ASML Holdings" },
 ];
 
 /* ── Format helpers ── */
 function fmtPrice(p) {
-  if (p == null) return "\u2014";
-  const n = parseFloat(p);
-  if (isNaN(n)) return "\u2014";
-  if (Math.abs(n) >= 1000) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (Math.abs(n) >= 1) return "$" + n.toFixed(2);
-  return "$" + n.toFixed(4);
-}
-function fmtIdx(p) {
-  if (p == null) return "\u2014";
-  const n = parseFloat(p);
-  if (isNaN(n)) return "\u2014";
-  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function fmtMcap(m) {
-  if (m == null) return "\u2014";
-  if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T";
-  if (m >= 1e9) return "$" + (m / 1e9).toFixed(2) + "B";
-  if (m >= 1e6) return "$" + (m / 1e6).toFixed(1) + "M";
-  return "$" + m.toLocaleString();
+  if (p == null || p === 0) return "\u2014";
+  if (Math.abs(p) >= 1000) return "$" + p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (Math.abs(p) >= 1) return "$" + p.toFixed(2);
+  return "$" + p.toFixed(4);
 }
 function fmtPct(v) {
   if (v == null) return "\u2014";
@@ -57,9 +60,9 @@ function fmtPct(v) {
 
 /* ── Index Card ── */
 function IndexCard({ data, meta }) {
-  const price = data?.close ? parseFloat(data.close) : null;
-  const pctChange = data?.percent_change ? parseFloat(data.percent_change) : null;
-  const change = data?.change ? parseFloat(data.change) : null;
+  const price = data?.c || null;
+  const change = data?.d || null;
+  const changePct = data?.dp || null;
   const pos = (change ?? 0) >= 0;
   const color = pos ? "#16a34a" : "#dc2626";
   const bgColor = pos ? "rgba(22,163,74,0.06)" : "rgba(220,38,38,0.06)";
@@ -67,18 +70,18 @@ function IndexCard({ data, meta }) {
   return (
     <div style={{
       background: bgColor, border: "1px solid " + (pos ? "rgba(22,163,74,0.15)" : "rgba(220,38,38,0.15)"),
-      borderRadius: 10, padding: "10px 14px", minWidth: 155, flex: "1 1 155px",
+      borderRadius: 10, padding: "10px 14px", minWidth: 145, flex: "1 1 145px",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
         <span style={{ fontSize: 14 }}>{meta.flag}</span>
         <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280" }}>{meta.name}</span>
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: "#111" }}>
-        {price != null ? fmtIdx(price) : "\u2014"}
+        {price ? price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "\u2014"}
       </div>
       <div style={{ fontSize: 12, fontWeight: 600, color, marginTop: 2 }}>
         {change != null ? (pos ? "+" : "") + change.toFixed(2) : ""}{" "}
-        {pctChange != null ? "(" + fmtPct(pctChange) + ")" : ""}
+        {changePct != null ? "(" + fmtPct(changePct) + ")" : ""}
       </div>
     </div>
   );
@@ -87,11 +90,10 @@ function IndexCard({ data, meta }) {
 /* ── Index Banner ── */
 function IndexBanner({ indexData }) {
   const groups = {};
-  INDICES.forEach(idx => {
+  INDEX_ETFS.forEach(idx => {
     if (!groups[idx.group]) groups[idx.group] = [];
     groups[idx.group].push(idx);
   });
-
   return (
     <div style={{ marginBottom: 24 }}>
       {Object.entries(groups).map(([groupName, items]) => (
@@ -129,6 +131,22 @@ function PctCell({ value }) {
 
 const tdR = { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" };
 
+/* ── Helper: sequential fetch with delay ── */
+async function fetchSequential(urls, delayMs = 100) {
+  const results = [];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      const json = await res.json();
+      results.push(json);
+    } catch {
+      results.push(null);
+    }
+    if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
+  }
+  return results;
+}
+
 /* ── Main Stock Dashboard ── */
 export default function StockDashboard() {
   const [indexData, setIndexData] = useState({});
@@ -138,155 +156,110 @@ export default function StockDashboard() {
   const [updated, setUpdated] = useState(null);
   const [auto, setAuto] = useState(true);
   const [apiKey, setApiKey] = useState(() => {
-    try { return localStorage.getItem("td_api_key") || ""; } catch { return ""; }
+    try { return localStorage.getItem("fh_api_key") || ""; } catch { return ""; }
   });
   const [showKeyInput, setShowKeyInput] = useState(false);
   const timer = useRef(null);
+  const fetchingRef = useRef(false);
 
   const hasKey = apiKey && apiKey.length > 5;
 
-  /* ── Fetch index quotes (1 API call) ── */
+  /* ── Fetch all index ETF quotes (6 calls) ── */
   const fetchIndices = useCallback(async () => {
     if (!hasKey) return;
-    try {
-      const symbols = INDICES.map(i => i.symbol).join(",");
-      const res = await fetch(TD + "/quote?symbol=" + symbols + "&apikey=" + apiKey);
-      const json = await res.json();
-
-      if (json.code === 429) return; // rate limit
-      if (json.status === "error") return;
-
-      const map = {};
-      // Single symbol returns object, multiple returns object keyed by symbol
-      if (json.close) {
-        // single result
-        map[INDICES[0].symbol] = json;
-      } else {
-        Object.entries(json).forEach(([sym, data]) => {
-          if (data && !data.code) map[sym] = data;
-        });
-      }
-      setIndexData(map);
-    } catch (e) { /* silent */ }
+    const urls = INDEX_ETFS.map(i => FH + "/quote?symbol=" + i.symbol + "&token=" + apiKey);
+    const results = await fetchSequential(urls, 50);
+    const map = {};
+    INDEX_ETFS.forEach((meta, i) => {
+      if (results[i] && results[i].c) map[meta.symbol] = results[i];
+    });
+    setIndexData(map);
   }, [hasKey, apiKey]);
 
-  /* ── Fetch stock quotes (1 API call for batch) ── */
+  /* ── Fetch all stock quotes (20 calls) ── */
   const fetchStocks = useCallback(async () => {
     if (!hasKey) { setLoading(false); return; }
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     try {
       setErr(null);
-      const symbols = TOP_STOCKS.join(",");
-      const res = await fetch(TD + "/quote?symbol=" + symbols + "&apikey=" + apiKey);
-      const text = await res.text();
+      const urls = TOP_STOCKS.map(s => FH + "/quote?symbol=" + s.symbol + "&token=" + apiKey);
+      const results = await fetchSequential(urls, 80);
 
-      let json;
-      try { json = JSON.parse(text); } catch {
-        setErr("API returned invalid response. Check your API key.");
+      // Check first result for auth error
+      if (results[0] && results[0].error) {
+        setErr("Finnhub API: " + results[0].error);
         setLoading(false);
-        return;
-      }
-
-      if (json.code === 401) {
-        setErr("Invalid API key. Please check your Twelve Data API key.");
-        setLoading(false);
-        return;
-      }
-      if (json.code === 429) {
-        setErr("API rate limit reached (8/min free). Please wait a moment.");
-        setLoading(false);
-        return;
-      }
-      if (json.status === "error") {
-        setErr("API Error: " + (json.message || "Unknown error"));
-        setLoading(false);
+        fetchingRef.current = false;
         return;
       }
 
-      const rows = [];
-      Object.entries(json).forEach(([sym, data]) => {
-        if (!data || data.code) return; // skip errors
-        rows.push({
-          symbol: data.symbol || sym,
-          name: data.name || sym,
-          price: data.close ? parseFloat(data.close) : null,
-          change: data.change ? parseFloat(data.change) : null,
-          changePct: data.percent_change ? parseFloat(data.percent_change) : null,
-          volume: data.volume ? parseInt(data.volume) : null,
-          high52w: data.fifty_two_week?.high ? parseFloat(data.fifty_two_week.high) : null,
-          low52w: data.fifty_two_week?.low ? parseFloat(data.fifty_two_week.low) : null,
+      const rows = TOP_STOCKS.map((meta, i) => {
+        const q = results[i];
+        if (!q || !q.c) return { symbol: meta.symbol, name: meta.name, price: null, changePct: null, change7d: null, change30d: null };
+        return {
+          symbol: meta.symbol,
+          name: meta.name,
+          price: q.c,           // current price
+          prevClose: q.pc,      // previous close
+          changePct: q.dp,      // daily change %
+          high: q.h,
+          low: q.l,
           change7d: null,
           change30d: null,
-        });
+        };
       });
 
       setStockRows(rows);
       setUpdated(new Date());
       setLoading(false);
 
-      // Fetch 7D/30D changes in background (uses more API credits)
-      fetchHistoricalChanges(rows);
-    } catch (e) { setErr(e.message); setLoading(false); }
+      // Fetch 7D/30D in background (needs candle data)
+      // Wait 5 seconds to avoid rate limit, then fetch
+      setTimeout(() => fetchHistorical(rows), 5000);
+    } catch (e) {
+      setErr(e.message);
+      setLoading(false);
+    }
+    fetchingRef.current = false;
   }, [hasKey, apiKey]);
 
-  /* ── Fetch 30D historical for 7D & 30D change calc ── */
-  const fetchHistoricalChanges = useCallback(async (rows) => {
-    if (!hasKey || rows.length === 0) return;
+  /* ── Fetch 30D candle data for 7D/30D change ── */
+  const fetchHistorical = useCallback(async (rows) => {
+    if (!hasKey) return;
+    const now = Math.floor(Date.now() / 1000);
+    const d30ago = now - 30 * 86400;
 
-    // To save API credits, batch 5 symbols per call
-    const batchSize = 5;
-    for (let i = 0; i < rows.length; i += batchSize) {
-      const batch = rows.slice(i, i + batchSize);
-      const symbols = batch.map(r => r.symbol).join(",");
+    const urls = rows.map(r =>
+      FH + "/stock/candle?symbol=" + r.symbol + "&resolution=D&from=" + d30ago + "&to=" + now + "&token=" + apiKey
+    );
 
-      try {
-        // Wait 8 seconds between batches to respect 8 credits/min
-        if (i > 0) await new Promise(r => setTimeout(r, 8000));
+    // Fetch with 100ms delay between each (20 calls over ~2s)
+    const results = await fetchSequential(urls, 100);
 
-        const res = await fetch(
-          TD + "/time_series?symbol=" + symbols +
-          "&interval=1day&outputsize=30&apikey=" + apiKey
-        );
-        const json = await res.json();
-        if (json.code === 429 || json.status === "error") continue;
+    setStockRows(prev => {
+      const updated = [...prev];
+      results.forEach((candle, i) => {
+        if (!candle || candle.s !== "ok" || !candle.c || candle.c.length < 2) return;
+        const row = updated[i];
+        if (!row || !row.price) return;
 
-        setStockRows(prev => {
-          const updated = [...prev];
+        const closes = candle.c;
+        const currentPrice = row.price;
 
-          const processSymbol = (sym, data) => {
-            if (!data?.values || !Array.isArray(data.values)) return;
-            const row = updated.find(r => r.symbol === sym);
-            if (!row || !row.price) return;
+        // 7D: ~5 trading days from end
+        if (closes.length >= 6) {
+          const p7d = closes[closes.length - 6];
+          if (p7d) row.change7d = ((currentPrice - p7d) / p7d) * 100;
+        }
 
-            const values = data.values; // newest first
-            const currentPrice = row.price;
-
-            // 7D change (approx 5 trading days)
-            if (values.length >= 5) {
-              const p7d = parseFloat(values[4]?.close);
-              if (p7d) row.change7d = ((currentPrice - p7d) / p7d) * 100;
-            }
-
-            // 30D change (last item)
-            if (values.length >= 20) {
-              const p30d = parseFloat(values[values.length - 1]?.close);
-              if (p30d) row.change30d = ((currentPrice - p30d) / p30d) * 100;
-            }
-          };
-
-          if (batch.length === 1) {
-            // Single symbol: json has meta + values directly
-            processSymbol(batch[0].symbol, json);
-          } else {
-            // Multiple symbols: json is keyed by symbol
-            Object.entries(json).forEach(([sym, data]) => {
-              processSymbol(sym, data);
-            });
-          }
-
-          return updated;
-        });
-      } catch (e) { /* silent */ }
-    }
+        // 30D: first close in the array
+        const p30d = closes[0];
+        if (p30d) row.change30d = ((currentPrice - p30d) / p30d) * 100;
+      });
+      return updated;
+    });
   }, [hasKey, apiKey]);
 
   const fetchAll = useCallback(() => {
@@ -294,15 +267,15 @@ export default function StockDashboard() {
     fetchStocks();
   }, [fetchIndices, fetchStocks]);
 
-  useEffect(() => { if (hasKey) fetchAll(); }, [hasKey, fetchAll]);
+  useEffect(() => { if (hasKey) fetchAll(); }, [hasKey]);
   useEffect(() => {
-    if (auto && hasKey) timer.current = setInterval(fetchAll, 300000); // 5분 (API 절약)
+    if (auto && hasKey) timer.current = setInterval(() => { fetchIndices(); fetchStocks(); }, 300000);
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [auto, hasKey, fetchAll]);
+  }, [auto, hasKey, fetchIndices, fetchStocks]);
 
   const handleSaveKey = (newKey) => {
     setApiKey(newKey);
-    try { localStorage.setItem("td_api_key", newKey); } catch {}
+    try { localStorage.setItem("fh_api_key", newKey); } catch {}
     setShowKeyInput(false);
     setLoading(true);
     setErr(null);
@@ -340,22 +313,22 @@ export default function StockDashboard() {
         {(!hasKey || showKeyInput) && (
           <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: 20, marginBottom: 20 }}>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#1e40af" }}>
-              {"\uD83D\uDD11"} Twelve Data API Key Required
+              {"\uD83D\uDD11"} Finnhub API Key Required
             </div>
             <p style={{ fontSize: 13, color: "#3b82f6", marginBottom: 12, lineHeight: 1.5 }}>
               Stock data is powered by{" "}
-              <a href="https://twelvedata.com/" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>
-                Twelve Data
+              <a href="https://finnhub.io/" target="_blank" rel="noopener" style={{ color: "#1d4ed8", fontWeight: 600 }}>
+                Finnhub
               </a>{" "}
-              (free: 8 credits/min, 800/day). Sign up and paste your API key below.
+              (free: 60 calls/min). Sign up and paste your API key below.
             </p>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
                 type="text"
                 defaultValue={apiKey}
-                placeholder="Paste your Twelve Data API key here..."
+                placeholder="Paste your Finnhub API key here..."
                 onKeyDown={e => { if (e.key === "Enter") handleSaveKey(e.target.value.trim()); }}
-                id="td-key-input"
+                id="fh-key-input"
                 style={{
                   flex: 1, padding: "10px 14px", border: "1px solid #d1d5db",
                   borderRadius: 8, fontSize: 13, outline: "none", fontFamily: "monospace",
@@ -363,7 +336,7 @@ export default function StockDashboard() {
               />
               <button
                 onClick={() => {
-                  const input = document.getElementById("td-key-input");
+                  const input = document.getElementById("fh-key-input");
                   if (input) handleSaveKey(input.value.trim());
                 }}
                 style={{
@@ -396,13 +369,13 @@ export default function StockDashboard() {
               </div>
             ) : (
               <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #e5e7eb" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700, background: "#fff" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 650, background: "#fff" }}>
                   <thead>
                     <tr>
                       <th style={{ ...thLeft, width: 36, textAlign: "center" }}>#</th>
                       <th style={{ ...thLeft, minWidth: 200 }}>Company</th>
                       <th style={thBase}>Price</th>
-                      <th style={thBase}>Change</th>
+                      <th style={thBase}>Daily</th>
                       <th style={thBase}>7D</th>
                       <th style={thBase}>30D</th>
                     </tr>
@@ -431,7 +404,7 @@ export default function StockDashboard() {
             )}
 
             <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
-              Data: Twelve Data API &middot; Auto-refresh 5min &middot; Global Top 20 by Market Cap
+              Data: Finnhub API &middot; Auto-refresh 5min &middot; Global Top 20 by Market Cap
             </div>
           </>
         )}
