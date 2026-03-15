@@ -49,7 +49,14 @@ export default async function handler(req, res) {
       const symbols = req.query.symbols || "";
       const { cookie, crumb } = await getCookieAndCrumb();
 
-      const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}&crumb=${encodeURIComponent(crumb)}`;
+      const fields = [
+        "symbol","shortName","regularMarketPrice","regularMarketChange",
+        "regularMarketChangePercent","marketCap","sharesOutstanding",
+        "regularMarketOpen","regularMarketDayHigh","regularMarketDayLow",
+        "regularMarketVolume"
+      ].join(",");
+
+      const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}&fields=${fields}&crumb=${encodeURIComponent(crumb)}`;
       const response = await fetch(url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
