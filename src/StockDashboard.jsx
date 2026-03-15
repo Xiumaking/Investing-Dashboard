@@ -89,7 +89,6 @@ const LOGO_DOMAINS = {
   CRCL:"circle.com",LUNR:"intuitivemachines.com",GME:"gamestop.com",
 };
 
-/* ── Country Filters (no ALL) ── */
 const COUNTRY_FILTERS = [
   { key: "US", label: "US" },
   { key: "HK", label: "Hong Kong" },
@@ -100,39 +99,9 @@ const COUNTRY_FILTERS = [
 function FlagSVG({ country, size = 20 }) {
   const h = Math.round(size * 0.67);
   const s = { borderRadius: 3, display: "block", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 };
-
-  if (country === "US") return (
-    <svg width={size} height={h} viewBox="0 0 60 42" style={s}>
-      {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i => <rect key={i} y={i*3.23} width="60" height="3.23" fill={i%2===0?"#B22234":"#fff"} />)}
-      <rect width="24" height="22.61" fill="#3C3B6E" />
-      {[...Array(50)].map((_,i)=>{const row=Math.floor(i/6),col=i%6;if(row%2===1&&col>=5)return null;const cx=row%2===0?2+col*4:4+col*4;const cy=1.5+row*2.1;return <circle key={i} cx={cx} cy={cy} r="0.7" fill="#fff"/>;})}
-    </svg>
-  );
-
-  if (country === "HK") return (
-    <svg width={size} height={h} viewBox="0 0 60 40" style={s}>
-      <rect width="60" height="40" fill="#DE2910" />
-      {[0,1,2,3,4].map(i=>{const a=(i*72-90)*Math.PI/180;const cx=30+Math.cos(a)*8;const cy=20+Math.sin(a)*8;return <ellipse key={i} cx={cx} cy={cy} rx="2.5" ry="5" fill="#fff" transform={`rotate(${i*72},${cx},${cy})`}/>;})}
-    </svg>
-  );
-
-  if (country === "KR") return (
-    <svg width={size} height={h} viewBox="0 0 60 40" style={s}>
-      <rect width="60" height="40" fill="#fff" />
-      <circle cx="30" cy="20" r="10" fill="#C60C30" />
-      <clipPath id="krb"><circle cx="30" cy="20" r="10" /></clipPath>
-      <path d="M20 20 Q30 10 40 20 Q30 30 20 20" fill="#003478" clipPath="url(#krb)" />
-      <rect x="42" y="8" width="2" height="10" fill="#000" transform="rotate(33,46,13)" />
-      <rect x="45" y="8" width="2" height="10" fill="#000" transform="rotate(33,49,13)" />
-      <rect x="42" y="24" width="2" height="10" fill="#000" transform="rotate(-33,46,29)" />
-      <rect x="45" y="24" width="2" height="10" fill="#000" transform="rotate(-33,49,29)" />
-      <rect x="12" y="8" width="2" height="10" fill="#000" transform="rotate(-33,14,13)" />
-      <rect x="15" y="8" width="2" height="10" fill="#000" transform="rotate(-33,17,13)" />
-      <rect x="12" y="24" width="2" height="10" fill="#000" transform="rotate(33,14,29)" />
-      <rect x="15" y="24" width="2" height="10" fill="#000" transform="rotate(33,17,29)" />
-    </svg>
-  );
-
+  if (country === "US") return (<svg width={size} height={h} viewBox="0 0 60 42" style={s}>{[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i=><rect key={i} y={i*3.23} width="60" height="3.23" fill={i%2===0?"#B22234":"#fff"}/>)}<rect width="24" height="22.61" fill="#3C3B6E"/>{[...Array(50)].map((_,i)=>{const row=Math.floor(i/6),col=i%6;if(row%2===1&&col>=5)return null;const cx=row%2===0?2+col*4:4+col*4;const cy=1.5+row*2.1;return<circle key={i} cx={cx} cy={cy} r="0.7" fill="#fff"/>;})}</svg>);
+  if (country === "HK") return (<svg width={size} height={h} viewBox="0 0 60 40" style={s}><rect width="60" height="40" fill="#DE2910"/>{[0,1,2,3,4].map(i=>{const a=(i*72-90)*Math.PI/180;const cx=30+Math.cos(a)*8;const cy=20+Math.sin(a)*8;return<ellipse key={i} cx={cx} cy={cy} rx="2.5" ry="5" fill="#fff" transform={`rotate(${i*72},${cx},${cy})`}/>;})}</svg>);
+  if (country === "KR") return (<svg width={size} height={h} viewBox="0 0 60 40" style={s}><rect width="60" height="40" fill="#fff"/><circle cx="30" cy="20" r="10" fill="#C60C30"/><clipPath id="krb"><circle cx="30" cy="20" r="10"/></clipPath><path d="M20 20 Q30 10 40 20 Q30 30 20 20" fill="#003478" clipPath="url(#krb)"/><rect x="42" y="8" width="2" height="10" fill="#000" transform="rotate(33,46,13)"/><rect x="45" y="8" width="2" height="10" fill="#000" transform="rotate(33,49,13)"/><rect x="42" y="24" width="2" height="10" fill="#000" transform="rotate(-33,46,29)"/><rect x="45" y="24" width="2" height="10" fill="#000" transform="rotate(-33,49,29)"/><rect x="12" y="8" width="2" height="10" fill="#000" transform="rotate(-33,14,13)"/><rect x="15" y="8" width="2" height="10" fill="#000" transform="rotate(-33,17,13)"/><rect x="12" y="24" width="2" height="10" fill="#000" transform="rotate(33,14,29)"/><rect x="15" y="24" width="2" height="10" fill="#000" transform="rotate(33,17,29)"/></svg>);
   return null;
 }
 
@@ -147,142 +116,33 @@ const fmt = {
     return "$" + p.toFixed(4);
   },
   idx(p) { return p == null ? "\u2014" : p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-  mcap(m, country) {
-    if (m == null) return "\u2014";
-    const prefix = country === "KR" ? "\u20A9" : country === "HK" ? "HK$" : "$";
-    if (m >= 1e12) return prefix + (m / 1e12).toFixed(2) + "T";
-    if (m >= 1e9) return prefix + (m / 1e9).toFixed(1) + "B";
-    if (m >= 1e8) return prefix + (m / 1e8).toFixed(1) + "\uc5B5"; // 억 for KR
-    if (m >= 1e6) return prefix + (m / 1e6).toFixed(0) + "M";
-    return prefix + m.toLocaleString();
-  },
-  mcapKR(m) {
-    if (m == null) return "\u2014";
-    if (m >= 1e16) return (m / 1e12).toFixed(1) + "\uc870"; // 조
-    if (m >= 1e12) return (m / 1e12).toFixed(2) + "\uc870";
-    if (m >= 1e8) return (m / 1e8).toFixed(0) + "\uc5B5";
-    return m.toLocaleString("ko-KR");
-  },
-  mcapHK(m) {
-    if (m == null) return "\u2014";
-    if (m >= 1e12) return "HK$" + (m / 1e12).toFixed(2) + "T";
-    if (m >= 1e9) return "HK$" + (m / 1e9).toFixed(1) + "B";
-    if (m >= 1e6) return "HK$" + (m / 1e6).toFixed(0) + "M";
-    return "HK$" + m.toLocaleString();
-  },
-  mcapUS(m) {
-    if (m == null) return "\u2014";
-    if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T";
-    if (m >= 1e9) return "$" + (m / 1e9).toFixed(1) + "B";
-    if (m >= 1e6) return "$" + (m / 1e6).toFixed(0) + "M";
-    return "$" + m.toLocaleString();
-  },
-  fmtMcap(m, country) {
-    if (country === "KR") return fmt.mcapKR(m);
-    if (country === "HK") return fmt.mcapHK(m);
-    return fmt.mcapUS(m);
-  },
+  mcapKR(m) { if (m == null) return "\u2014"; if (m >= 1e16) return (m / 1e12).toFixed(1) + "\uc870"; if (m >= 1e12) return (m / 1e12).toFixed(2) + "\uc870"; if (m >= 1e8) return (m / 1e8).toFixed(0) + "\uc5B5"; return m.toLocaleString("ko-KR"); },
+  mcapHK(m) { if (m == null) return "\u2014"; if (m >= 1e12) return "HK$" + (m / 1e12).toFixed(2) + "T"; if (m >= 1e9) return "HK$" + (m / 1e9).toFixed(1) + "B"; if (m >= 1e6) return "HK$" + (m / 1e6).toFixed(0) + "M"; return "HK$" + m.toLocaleString(); },
+  mcapUS(m) { if (m == null) return "\u2014"; if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T"; if (m >= 1e9) return "$" + (m / 1e9).toFixed(1) + "B"; if (m >= 1e6) return "$" + (m / 1e6).toFixed(0) + "M"; return "$" + m.toLocaleString(); },
+  fmtMcap(m, country) { if (country === "KR") return fmt.mcapKR(m); if (country === "HK") return fmt.mcapHK(m); return fmt.mcapUS(m); },
+  shares(s) { if (s == null) return "\u2014"; if (s >= 1e9) return (s / 1e9).toFixed(2) + "B"; if (s >= 1e6) return (s / 1e6).toFixed(1) + "M"; if (s >= 1e3) return (s / 1e3).toFixed(0) + "K"; return s.toLocaleString(); },
   pct(v) { return v == null ? "\u2014" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; },
   change(v) { return v == null ? "" : (v >= 0 ? "+" : "") + v.toFixed(2); },
 };
 
 /* ── Shared Components ── */
-function MiniSpark({ data, width=44, height=18 }) {
-  if(!data||data.filter(v=>v!=null).length<3) return <div style={{width,height}}/>;
-  const cl=data.filter(v=>v!=null),mn=Math.min(...cl),mx=Math.max(...cl),r=mx-mn||1,up=cl[cl.length-1]>=cl[0];
-  const pts=cl.map((v,i)=>((i/(cl.length-1))*width).toFixed(1)+","+(height-((v-mn)/r)*(height-2)-1).toFixed(1)).join(" ");
-  return <svg width={width} height={height} style={{display:"block",flexShrink:0}}><polyline points={pts} fill="none" stroke={up?"#16a34a":"#dc2626"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-}
+function MiniSpark({data,width=44,height=18}){if(!data||data.filter(v=>v!=null).length<3)return<div style={{width,height}}/>;const cl=data.filter(v=>v!=null),mn=Math.min(...cl),mx=Math.max(...cl),r=mx-mn||1,up=cl[cl.length-1]>=cl[0];const pts=cl.map((v,i)=>((i/(cl.length-1))*width).toFixed(1)+","+(height-((v-mn)/r)*(height-2)-1).toFixed(1)).join(" ");return<svg width={width} height={height} style={{display:"block",flexShrink:0}}><polyline points={pts} fill="none" stroke={up?"#16a34a":"#dc2626"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
 
-function Spark30D({ data, width=90, height=28 }) {
-  if(!data||data.filter(v=>v!=null).length<3) return null;
-  const cl=data.filter(v=>v!=null),mn=Math.min(...cl),mx=Math.max(...cl),r=mx-mn||1,up=cl[cl.length-1]>=cl[0],color=up?"#16a34a":"#dc2626";
-  const pts=cl.map((v,i)=>((i/(cl.length-1))*width).toFixed(1)+","+(height-((v-mn)/r)*(height-4)-2).toFixed(1)).join(" ");
-  const gId="sg"+Math.random().toString(36).slice(2,6),fp=pts+` ${width},${height} 0,${height}`;
-  return <svg width={width} height={height} style={{display:"block"}}><defs><linearGradient id={gId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.2"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs><polygon points={fp} fill={`url(#${gId})`}/><polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-}
+function Spark30D({data,width=90,height=28}){if(!data||data.filter(v=>v!=null).length<3)return null;const cl=data.filter(v=>v!=null),mn=Math.min(...cl),mx=Math.max(...cl),r=mx-mn||1,up=cl[cl.length-1]>=cl[0],color=up?"#16a34a":"#dc2626";const pts=cl.map((v,i)=>((i/(cl.length-1))*width).toFixed(1)+","+(height-((v-mn)/r)*(height-4)-2).toFixed(1)).join(" ");const gId="sg"+Math.random().toString(36).slice(2,6),fp=pts+` ${width},${height} 0,${height}`;return<svg width={width} height={height} style={{display:"block"}}><defs><linearGradient id={gId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.2"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs><polygon points={fp} fill={`url(#${gId})`}/><polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
 
-function DailyCandle({open,close,high,low}) {
-  if(open==null||close==null||high==null||low==null) return null;
-  const up=close>=open,color=up?"#16a34a":"#dc2626",W=14,H=26,r=high-low||1;
-  const bTop=H-((Math.max(open,close)-low)/r)*(H-4)-2,bBot=H-((Math.min(open,close)-low)/r)*(H-4)-2,wTop=H-((high-low)/r)*(H-4)-2,bH=Math.max(bBot-bTop,1.5);
-  return <svg width={W} height={H} style={{display:"block",flexShrink:0}}><line x1={W/2} y1={wTop} x2={W/2} y2={H-2} stroke={color} strokeWidth="1"/><rect x={3} y={bTop} width={W-6} height={bH} fill={color} rx="1"/></svg>;
-}
+function DailyCandle({open,close,high,low}){if(open==null||close==null||high==null||low==null)return null;const up=close>=open,color=up?"#16a34a":"#dc2626",W=14,H=26,r=high-low||1;const bTop=H-((Math.max(open,close)-low)/r)*(H-4)-2,bBot=H-((Math.min(open,close)-low)/r)*(H-4)-2,wTop=H-((high-low)/r)*(H-4)-2,bH=Math.max(bBot-bTop,1.5);return<svg width={W} height={H} style={{display:"block",flexShrink:0}}><line x1={W/2} y1={wTop} x2={W/2} y2={H-2} stroke={color} strokeWidth="1"/><rect x={3} y={bTop} width={W-6} height={bH} fill={color} rx="1"/></svg>;}
 
-function CompanyLogo({symbol,name}) {
-  const [src,setSrc]=useState(0);const domain=LOGO_DOMAINS[symbol];
-  const urls=[domain?`https://cdn.tickerlogos.com/${domain}`:null,`https://eodhd.com/img/logos/US/${symbol}.png`].filter(Boolean);
-  if(src>=urls.length) return <div style={{width:28,height:28,borderRadius:6,background:"#f0f1f5",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:"#888",flexShrink:0}}>{(name||symbol).slice(0,2)}</div>;
-  return <img src={urls[src]} alt={name} width={28} height={28} style={{borderRadius:6,flexShrink:0,background:"#fff",objectFit:"contain"}} onError={()=>setSrc(p=>p+1)}/>;
-}
+function CompanyLogo({symbol,name}){const[src,setSrc]=useState(0);const domain=LOGO_DOMAINS[symbol];const urls=[domain?`https://cdn.tickerlogos.com/${domain}`:null,`https://eodhd.com/img/logos/US/${symbol}.png`].filter(Boolean);if(src>=urls.length)return<div style={{width:28,height:28,borderRadius:6,background:"#f0f1f5",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:"#888",flexShrink:0}}>{(name||symbol).slice(0,2)}</div>;return<img src={urls[src]} alt={name} width={28} height={28} style={{borderRadius:6,flexShrink:0,background:"#fff",objectFit:"contain"}} onError={()=>setSrc(p=>p+1)}/>;}
 
-function CompanyCell({row,isPinned,onTogglePin}) {
-  const [hov,setHov]=useState(false);
-  return (
-    <td style={{padding:"12px 8px"}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <div style={{position:"relative",flexShrink:0}}>
-          <CompanyLogo symbol={row.symbol} name={row.name}/>
-          {(hov||isPinned)&&(
-            <button onClick={e=>{e.stopPropagation();onTogglePin(row.symbol);}}
-              style={{position:"absolute",top:-6,left:-6,width:18,height:18,borderRadius:"50%",
-                background:isPinned?"#6366f1":"#fff",border:isPinned?"none":"1px solid #ddd",
-                boxShadow:"0 1px 3px rgba(0,0,0,0.15)",display:"flex",alignItems:"center",justifyContent:"center",
-                cursor:"pointer",padding:0,fontSize:10,lineHeight:1,color:isPinned?"#fff":"#999",transition:"all .15s"}}>
-              {"\uD83D\uDCCC"}
-            </button>
-          )}
-        </div>
-        <div>
-          <div style={{fontWeight:600,fontSize:13,color:"#1a1a2e"}}>{row.name}</div>
-          <div style={{fontSize:10,color:"#8b8fa3",fontWeight:500}}>{row.symbol}</div>
-        </div>
-      </div>
-    </td>
-  );
-}
+function CompanyCell({row,isPinned,onTogglePin}){const[hov,setHov]=useState(false);return(<td style={{padding:"12px 8px"}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}><div style={{display:"flex",alignItems:"center",gap:8}}><div style={{position:"relative",flexShrink:0}}><CompanyLogo symbol={row.symbol} name={row.name}/>{(hov||isPinned)&&(<button onClick={e=>{e.stopPropagation();onTogglePin(row.symbol);}} style={{position:"absolute",top:-6,left:-6,width:18,height:18,borderRadius:"50%",background:isPinned?"#6366f1":"#fff",border:isPinned?"none":"1px solid #ddd",boxShadow:"0 1px 3px rgba(0,0,0,0.15)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",padding:0,fontSize:10,lineHeight:1,color:isPinned?"#fff":"#999",transition:"all .15s"}}>{"\uD83D\uDCCC"}</button>)}</div><div><div style={{fontWeight:600,fontSize:13,color:"#1a1a2e"}}>{row.name}</div><div style={{fontSize:10,color:"#8b8fa3",fontWeight:500}}>{row.symbol}</div></div></div></td>);}
 
-function TickerCard({item,quote,sparkData}) {
-  const price=quote?.regularMarketPrice??null,change=quote?.regularMarketChange??null,changePct=quote?.regularMarketChangePercent??null;
-  const pos=(change??0)>=0,color=pos?"#22c55e":"#ef4444",arrow=pos?"\u25B2":"\u25BC";
-  return (
-    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",flex:"1 1 0%",minWidth:0,borderRight:"1px solid #2d2d44",cursor:"default",transition:"background .15s",overflow:"hidden"}}
-      onMouseEnter={e=>e.currentTarget.style.background="#252542"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:10,fontWeight:600,color:"#8888aa",marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.label}</div>
-        <div style={{fontSize:13,fontWeight:700,color:"#eee",marginBottom:1}}>{price!=null?fmt.idx(price):"\u2014"}</div>
-        <div style={{fontSize:9,fontWeight:600,color,display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap"}}>
-          <span style={{fontSize:6}}>{change!=null?arrow:""}</span><span>{fmt.change(change)}</span><span>({fmt.pct(changePct)})</span>
-        </div>
-      </div>
-      <MiniSpark data={sparkData}/>
-    </div>
-  );
-}
+function TickerCard({item,quote,sparkData}){const price=quote?.regularMarketPrice??null,change=quote?.regularMarketChange??null,changePct=quote?.regularMarketChangePercent??null;const pos=(change??0)>=0,color=pos?"#22c55e":"#ef4444",arrow=pos?"\u25B2":"\u25BC";return(<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",flex:"1 1 0%",minWidth:0,borderRight:"1px solid #2d2d44",cursor:"default",transition:"background .15s",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.background="#252542"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{flex:1,minWidth:0}}><div style={{fontSize:10,fontWeight:600,color:"#8888aa",marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.label}</div><div style={{fontSize:13,fontWeight:700,color:"#eee",marginBottom:1}}>{price!=null?fmt.idx(price):"\u2014"}</div><div style={{fontSize:9,fontWeight:600,color,display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap"}}><span style={{fontSize:6}}>{change!=null?arrow:""}</span><span>{fmt.change(change)}</span><span>({fmt.pct(changePct)})</span></div></div><MiniSpark data={sparkData}/></div>);}
 
-function TickerBanner({tickerData,sparklines}) {
-  const renderRow=items=><div style={{display:"flex",width:"100%"}}>{items.map(item=><TickerCard key={item.symbol} item={item} quote={tickerData[item.symbol]} sparkData={sparklines[item.symbol]}/>)}</div>;
-  return (
-    <div style={{background:"#1a1a2e",borderRadius:10,overflow:"hidden",marginBottom:20,border:"1px solid #252547"}}>
-      <div style={{overflowX:"auto",scrollbarWidth:"none",msOverflowStyle:"none"}}>
-        <style>{`.tb-s::-webkit-scrollbar{display:none}`}</style>
-        <div className="tb-s" style={{minWidth:900}}>{renderRow(TICKER_ROW1)}<div style={{borderTop:"1px solid #2d2d44"}}/>{renderRow(TICKER_ROW2)}</div>
-      </div>
-    </div>
-  );
-}
+function TickerBanner({tickerData,sparklines}){const renderRow=items=><div style={{display:"flex",width:"100%"}}>{items.map(item=><TickerCard key={item.symbol} item={item} quote={tickerData[item.symbol]} sparkData={sparklines[item.symbol]}/>)}</div>;return(<div style={{background:"#1a1a2e",borderRadius:10,overflow:"hidden",marginBottom:20,border:"1px solid #252547"}}><div style={{overflowX:"auto",scrollbarWidth:"none",msOverflowStyle:"none"}}><style>{`.tb-s::-webkit-scrollbar{display:none}`}</style><div className="tb-s" style={{minWidth:900}}>{renderRow(TICKER_ROW1)}<div style={{borderTop:"1px solid #2d2d44"}}/>{renderRow(TICKER_ROW2)}</div></div></div>);}
 
-function PctCell({value}) {
-  if(value==null) return <td style={{...tdR,color:"#aaa"}}>{"\u2014"}</td>;
-  const pos=value>=0;
-  return <td style={tdR}><span style={{color:pos?"#16a34a":"#dc2626",background:pos?"rgba(22,163,74,0.08)":"rgba(220,38,38,0.08)",padding:"3px 8px",borderRadius:5,fontSize:12,fontWeight:600,display:"inline-block",minWidth:66,textAlign:"center"}}>{fmt.pct(value)}</span></td>;
-}
+function PctCell({value}){if(value==null)return<td style={{...tdR,color:"#aaa"}}>{"\u2014"}</td>;const pos=value>=0;return<td style={tdR}><span style={{color:pos?"#16a34a":"#dc2626",background:pos?"rgba(22,163,74,0.08)":"rgba(220,38,38,0.08)",padding:"3px 8px",borderRadius:5,fontSize:12,fontWeight:600,display:"inline-block",minWidth:66,textAlign:"center"}}>{fmt.pct(value)}</span></td>;}
 
-function DailyCell({row}) {
-  if(row.changePct==null) return <td style={{...tdR,color:"#aaa"}}>{"\u2014"}</td>;
-  const pos=row.changePct>=0;
-  return <td style={tdR}><div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:5}}><DailyCandle open={row.open} close={row.price} high={row.high} low={row.low}/><span style={{color:pos?"#16a34a":"#dc2626",background:pos?"rgba(22,163,74,0.08)":"rgba(220,38,38,0.08)",padding:"3px 8px",borderRadius:5,fontSize:12,fontWeight:600,display:"inline-block",minWidth:66,textAlign:"center"}}>{fmt.pct(row.changePct)}</span></div></td>;
-}
+function DailyCell({row}){if(row.changePct==null)return<td style={{...tdR,color:"#aaa"}}>{"\u2014"}</td>;const pos=row.changePct>=0;return<td style={tdR}><div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:5}}><DailyCandle open={row.open} close={row.price} high={row.high} low={row.low}/><span style={{color:pos?"#16a34a":"#dc2626",background:pos?"rgba(22,163,74,0.08)":"rgba(220,38,38,0.08)",padding:"3px 8px",borderRadius:5,fontSize:12,fontWeight:600,display:"inline-block",minWidth:66,textAlign:"center"}}>{fmt.pct(row.changePct)}</span></div></td>;}
 
 const tdR={padding:"12px 8px",textAlign:"right",fontSize:13,color:"#374151"};
 
@@ -302,14 +162,13 @@ export default function StockDashboard() {
 
   const togglePin=symbol=>{setPinnedSymbols(prev=>{const next=prev.includes(symbol)?prev.filter(s=>s!==symbol):[...prev,symbol];try{localStorage.setItem("pinned_stocks",JSON.stringify(next));}catch{}return next;});};
 
-  /* Per-country mcap ranking */
   const displayRows=React.useMemo(()=>{
     const countryStocks=stockRows.filter(r=>r.country===countryFilter);
     const sorted=[...countryStocks].sort((a,b)=>(b.marketCap||0)-(a.marketCap||0));
     const withRank=sorted.map((r,i)=>({...r,rank:i+1}));
     const pinned=withRank.filter(r=>pinnedSymbols.includes(r.symbol));
     const unpinned=withRank.filter(r=>!pinnedSymbols.includes(r.symbol));
-    return [...pinned,...unpinned];
+    return[...pinned,...unpinned];
   },[stockRows,countryFilter,pinnedSymbols]);
 
   const countryCounts=React.useMemo(()=>{const c={};stockRows.forEach(r=>{c[r.country]=(c[r.country]||0)+1;});return c;},[stockRows]);
@@ -328,7 +187,7 @@ export default function StockDashboard() {
           const tMap={},spMap={},stSpMap={};
           ALL_TICKERS.forEach(item=>{const c=cd[item.symbol];if(!c)return;const cl=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[];spMap[item.symbol]=cl;const prev=cl.length>=2?cl[cl.length-2]:null;const last=cl[cl.length-1]||null;if(last)tMap[item.symbol]={regularMarketPrice:last,regularMarketChange:prev?last-prev:null,regularMarketChangePercent:prev?((last-prev)/prev)*100:null};});
           setTickerData(tMap);setSparklines(spMap);
-          const rows=STOCKS.map(m=>{const c=cd[m.symbol];if(!c)return{symbol:m.symbol,name:m.name,country:m.country,price:null,marketCap:null,changePct:null,change7d:null,change30d:null,open:null,high:null,low:null};const q=c.indicators?.quote?.[0]||{};const cl=(q.close||[]).filter(v=>v!=null);const op=(q.open||[]).filter(v=>v!=null);const hi=(q.high||[]).filter(v=>v!=null);const lo=(q.low||[]).filter(v=>v!=null);const last=cl[cl.length-1]||null;const prev=cl.length>=2?cl[cl.length-2]:null;const p7=cl.length>=6?cl[cl.length-6]:null;const p30=cl[0]||null;stSpMap[m.symbol]=cl;return{symbol:m.symbol,name:m.name,country:m.country,price:last,marketCap:null,changePct:prev?((last-prev)/prev)*100:null,change7d:p7?((last-p7)/p7)*100:null,change30d:p30?((last-p30)/p30)*100:null,open:op[op.length-1]||null,high:hi[hi.length-1]||null,low:lo[lo.length-1]||null};});
+          const rows=STOCKS.map(m=>{const c=cd[m.symbol];if(!c)return{symbol:m.symbol,name:m.name,country:m.country,price:null,marketCap:null,shares:null,changePct:null,change7d:null,change30d:null,open:null,high:null,low:null};const q=c.indicators?.quote?.[0]||{};const cl=(q.close||[]).filter(v=>v!=null);const op=(q.open||[]).filter(v=>v!=null);const hi=(q.high||[]).filter(v=>v!=null);const lo=(q.low||[]).filter(v=>v!=null);const last=cl[cl.length-1]||null;const prev=cl.length>=2?cl[cl.length-2]:null;const p7=cl.length>=6?cl[cl.length-6]:null;const p30=cl[0]||null;stSpMap[m.symbol]=cl;return{symbol:m.symbol,name:m.name,country:m.country,price:last,marketCap:null,shares:null,changePct:prev?((last-prev)/prev)*100:null,change7d:p7?((last-p7)/p7)*100:null,change30d:p30?((last-p30)/p30)*100:null,open:op[op.length-1]||null,high:hi[hi.length-1]||null,low:lo[lo.length-1]||null};});
           setStockRows(rows);setStockSpark(stSpMap);setUpdated(new Date());setLoading(false);return;
         }catch(e){setErr("Failed: "+e.message);setLoading(false);return;}
       }
@@ -337,7 +196,25 @@ export default function StockDashboard() {
       quotes.forEach(q=>{if(ts.has(q.symbol))tMap[q.symbol]=q;});setTickerData(tMap);
 
       const ss=new Set(STOCKS.map(s=>s.symbol));const rows=[];
-      quotes.forEach(q=>{if(!ss.has(q.symbol))return;const m=STOCKS.find(s=>s.symbol===q.symbol);rows.push({symbol:q.symbol,name:m?.name||q.shortName||q.symbol,country:m?.country||"US",price:q.regularMarketPrice,marketCap:q.marketCap,changePct:q.regularMarketChangePercent,change7d:null,change30d:null,open:q.regularMarketOpen,high:q.regularMarketDayHigh,low:q.regularMarketDayLow});});
+      quotes.forEach(q=>{
+        if(!ss.has(q.symbol))return;
+        const m=STOCKS.find(s=>s.symbol===q.symbol);
+        const shares=q.sharesOutstanding||null;
+        const mcap=q.marketCap||(q.regularMarketPrice&&shares?q.regularMarketPrice*shares:null);
+        rows.push({
+          symbol:q.symbol,
+          name:m?.name||q.shortName||q.symbol,
+          country:m?.country||"US",
+          price:q.regularMarketPrice,
+          marketCap:mcap,
+          shares:shares,
+          changePct:q.regularMarketChangePercent,
+          change7d:null,change30d:null,
+          open:q.regularMarketOpen,
+          high:q.regularMarketDayHigh,
+          low:q.regularMarketDayLow,
+        });
+      });
       setStockRows(rows);setUpdated(new Date());setLoading(false);
       fetchChartData(rows);
     }catch(e){setErr("Error: "+e.message);setLoading(false);}
@@ -378,39 +255,27 @@ export default function StockDashboard() {
 
         <TickerBanner tickerData={tickerData} sparklines={sparklines}/>
 
-        {/* Country Filter Tabs */}
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
           {COUNTRY_FILTERS.map(f=>{
             const active=countryFilter===f.key;const count=countryCounts[f.key]||0;
-            return (
-              <button key={f.key} onClick={()=>setCountryFilter(f.key)}
-                style={{display:"flex",alignItems:"center",gap:7,padding:"8px 16px",borderRadius:8,fontSize:13,fontWeight:600,
-                  border:active?"2px solid #6366f1":"1px solid #e0e0e8",background:active?"#f0f0ff":"#fff",
-                  color:active?"#4f46e5":"#6b7280",cursor:"pointer",transition:"all .15s",
-                  boxShadow:active?"0 0 0 1px rgba(99,102,241,0.2)":"none"}}>
-                <FlagSVG country={f.key} size={18}/>
-                <span>{f.label}</span>
-                <span style={{fontSize:11,color:active?"#6366f1":"#b0b4c0",fontWeight:500}}>({count})</span>
-              </button>
-            );
+            return(<button key={f.key} onClick={()=>setCountryFilter(f.key)} style={{display:"flex",alignItems:"center",gap:7,padding:"8px 16px",borderRadius:8,fontSize:13,fontWeight:600,border:active?"2px solid #6366f1":"1px solid #e0e0e8",background:active?"#f0f0ff":"#fff",color:active?"#4f46e5":"#6b7280",cursor:"pointer",transition:"all .15s",boxShadow:active?"0 0 0 1px rgba(99,102,241,0.2)":"none"}}><FlagSVG country={f.key} size={18}/><span>{f.label}</span><span style={{fontSize:11,color:active?"#6366f1":"#b0b4c0",fontWeight:500}}>({count})</span></button>);
           })}
         </div>
 
         {err&&<div style={{background:"#fef2f2",border:"1px solid #fecaca",color:"#dc2626",padding:"10px 16px",borderRadius:8,marginBottom:16,fontSize:13}}>{err}</div>}
 
         {loading?(
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:300,color:"#8b8fa3"}}>
-            <div style={{textAlign:"center"}}><div style={{fontSize:36,marginBottom:8}}>{"\uD83D\uDCE1"}</div><p style={{fontSize:14}}>Loading market data...</p></div>
-          </div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:300,color:"#8b8fa3"}}><div style={{textAlign:"center"}}><div style={{fontSize:36,marginBottom:8}}>{"\uD83D\uDCE1"}</div><p style={{fontSize:14}}>Loading market data...</p></div></div>
         ):(
           <div style={{background:"#fff",borderRadius:12,border:"1px solid #ebedf2",overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
             <div style={{overflowX:"auto"}}>
-              <table style={{width:"100%",borderCollapse:"collapse",minWidth:880}}>
+              <table style={{width:"100%",borderCollapse:"collapse",minWidth:960}}>
                 <thead>
                   <tr>
                     <th style={{...thL,width:36,textAlign:"center",padding:"10px 4px"}}>#</th>
                     <th style={{...thL,minWidth:170}}>Company</th>
-                    <th style={th}>Mcap</th>
+                    <th style={th}>Shares</th>
+                    <th style={th}>Market Cap</th>
                     <th style={th}>Price</th>
                     <th style={th}>Daily</th>
                     <th style={th}>7D</th>
@@ -421,12 +286,13 @@ export default function StockDashboard() {
                 <tbody>
                   {displayRows.map(r=>{
                     const isPinned=pinnedSymbols.includes(r.symbol);
-                    return (
+                    return(
                       <tr key={r.symbol} style={{borderBottom:"1px solid #f3f4f6",transition:"background .12s",background:isPinned?"rgba(99,102,241,0.04)":"#fff"}}
                         onMouseEnter={e=>e.currentTarget.style.background=isPinned?"rgba(99,102,241,0.07)":"#fafbfc"}
                         onMouseLeave={e=>e.currentTarget.style.background=isPinned?"rgba(99,102,241,0.04)":"#fff"}>
                         <td style={{padding:"12px 4px",textAlign:"center",fontSize:11,color:"#b0b4c0",fontWeight:600}}>{r.rank}</td>
                         <CompanyCell row={r} isPinned={isPinned} onTogglePin={togglePin}/>
+                        <td style={{...tdR,color:"#888",fontSize:12}}>{fmt.shares(r.shares)}</td>
                         <td style={{...tdR,color:"#666",fontSize:12}}>{fmt.fmtMcap(r.marketCap,r.country)}</td>
                         <td style={{...tdR,fontWeight:700,color:"#1a1a2e",fontSize:14}}>{fmt.price(r.price,r.country)}</td>
                         <DailyCell row={r}/>
@@ -437,7 +303,7 @@ export default function StockDashboard() {
                     );
                   })}
                   {displayRows.length===0&&!loading&&(
-                    <tr><td colSpan={8} style={{padding:40,textAlign:"center",color:"#b0b4c0",fontSize:14}}>No stocks in this category</td></tr>
+                    <tr><td colSpan={9} style={{padding:40,textAlign:"center",color:"#b0b4c0",fontSize:14}}>No stocks in this category</td></tr>
                   )}
                 </tbody>
               </table>
