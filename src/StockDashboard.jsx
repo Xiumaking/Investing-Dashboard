@@ -39,14 +39,6 @@ const LOGO_DOMAINS = {
   JNJ:"jnj.com",ASML:"asml.com",
 };
 
-/* ── Colors ── */
-const C = {
-  bg: "#0d0d1a", card: "#14142b", cardHover: "#1c1c3a", border: "#252547",
-  text: "#e4e4f0", textDim: "#7a7a9e", green: "#22c55e", red: "#ef4444",
-  greenBg: "rgba(34,197,94,0.1)", redBg: "rgba(239,68,68,0.1)",
-  accent: "#6366f1", white: "#fff",
-};
-
 /* ── Formatters ── */
 const fmt = {
   price(p) {
@@ -67,29 +59,29 @@ const fmt = {
   change(v) { return v == null ? "" : (v >= 0 ? "+" : "") + v.toFixed(2); },
 };
 
-/* ── Mini Sparkline (ticker) ── */
+/* ── Mini Sparkline (ticker banner) ── */
 function MiniSpark({ data, width = 44, height = 18 }) {
   if (!data || data.filter(v => v != null).length < 3) return <div style={{ width, height }} />;
   const cl = data.filter(v => v != null);
   const mn = Math.min(...cl), mx = Math.max(...cl), r = mx - mn || 1;
   const up = cl[cl.length - 1] >= cl[0];
   const pts = cl.map((v, i) => ((i / (cl.length - 1)) * width).toFixed(1) + "," + (height - ((v - mn) / r) * (height - 2) - 1).toFixed(1)).join(" ");
-  return <svg width={width} height={height} style={{ display: "block", flexShrink: 0 }}><polyline points={pts} fill="none" stroke={up ? C.green : C.red} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  return <svg width={width} height={height} style={{ display: "block", flexShrink: 0 }}><polyline points={pts} fill="none" stroke={up ? "#16a34a" : "#dc2626"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-/* ── 30D Sparkline (table) ── */
+/* ── 30D Sparkline (table column) ── */
 function Spark30D({ data, width = 90, height = 28 }) {
   if (!data || data.filter(v => v != null).length < 3) return null;
   const cl = data.filter(v => v != null);
   const mn = Math.min(...cl), mx = Math.max(...cl), r = mx - mn || 1;
   const up = cl[cl.length - 1] >= cl[0];
-  const color = up ? C.green : C.red;
+  const color = up ? "#16a34a" : "#dc2626";
   const pts = cl.map((v, i) => ((i / (cl.length - 1)) * width).toFixed(1) + "," + (height - ((v - mn) / r) * (height - 4) - 2).toFixed(1)).join(" ");
   const gradId = "sg" + Math.random().toString(36).slice(2, 6);
   const fillPts = pts + ` ${width},${height} 0,${height}`;
   return (
     <svg width={width} height={height} style={{ display: "block" }}>
-      <defs><linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.25" /><stop offset="100%" stopColor={color} stopOpacity="0" /></linearGradient></defs>
+      <defs><linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.2" /><stop offset="100%" stopColor={color} stopOpacity="0" /></linearGradient></defs>
       <polygon points={fillPts} fill={`url(#${gradId})`} />
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -100,7 +92,7 @@ function Spark30D({ data, width = 90, height = 28 }) {
 function DailyCandle({ open, close, high, low }) {
   if (open == null || close == null || high == null || low == null) return null;
   const up = close >= open;
-  const color = up ? C.green : C.red;
+  const color = up ? "#16a34a" : "#dc2626";
   const W = 14, H = 26, r = high - low || 1;
   const bTop = H - ((Math.max(open, close) - low) / r) * (H - 4) - 2;
   const bBot = H - ((Math.min(open, close) - low) / r) * (H - 4) - 2;
@@ -114,8 +106,8 @@ function CompanyLogo({ symbol, name }) {
   const [src, setSrc] = useState(0);
   const domain = LOGO_DOMAINS[symbol];
   const urls = [domain ? `https://cdn.tickerlogos.com/${domain}` : null, `https://eodhd.com/img/logos/US/${symbol}.png`].filter(Boolean);
-  if (src >= urls.length) return <div style={{ width: 28, height: 28, borderRadius: 6, background: "#252547", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: C.textDim, flexShrink: 0 }}>{symbol.slice(0, 3)}</div>;
-  return <img src={urls[src]} alt={name} width={28} height={28} style={{ borderRadius: 6, flexShrink: 0, background: "#1a1a2e", objectFit: "contain" }} onError={() => setSrc(p => p + 1)} />;
+  if (src >= urls.length) return <div style={{ width: 28, height: 28, borderRadius: 6, background: "#f0f1f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#888", flexShrink: 0 }}>{symbol.slice(0, 3)}</div>;
+  return <img src={urls[src]} alt={name} width={28} height={28} style={{ borderRadius: 6, flexShrink: 0, background: "#fff", objectFit: "contain" }} onError={() => setSrc(p => p + 1)} />;
 }
 
 /* ── Pin Icon ── */
@@ -123,7 +115,7 @@ function PinIcon({ pinned, onClick }) {
   return (
     <button onClick={onClick} title={pinned ? "Unpin" : "Pin to top"} style={{
       background: "none", border: "none", cursor: "pointer", padding: 2,
-      color: pinned ? C.accent : "#444466", fontSize: 14, lineHeight: 1,
+      color: pinned ? "#6366f1" : "#ccc", fontSize: 13, lineHeight: 1,
       transition: "color .15s, transform .15s",
       transform: pinned ? "rotate(0deg)" : "rotate(45deg)",
     }}>
@@ -138,14 +130,14 @@ function TickerCard({ item, quote, sparkData }) {
   const change = quote?.regularMarketChange ?? null;
   const changePct = quote?.regularMarketChangePercent ?? null;
   const pos = (change ?? 0) >= 0;
-  const color = pos ? C.green : C.red;
+  const color = pos ? "#22c55e" : "#ef4444";
   const arrow = pos ? "\u25B2" : "\u25BC";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", flex: "1 1 0%", minWidth: 0, borderRight: "1px solid " + C.border, cursor: "default", transition: "background .15s", overflow: "hidden" }}
-      onMouseEnter={e => e.currentTarget.style.background = C.cardHover} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", flex: "1 1 0%", minWidth: 0, borderRight: "1px solid #2d2d44", cursor: "default", transition: "background .15s", overflow: "hidden" }}
+      onMouseEnter={e => e.currentTarget.style.background = "#252542"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: C.textDim, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 1 }}>{price != null ? fmt.idx(price) : "\u2014"}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: "#8888aa", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#eee", marginBottom: 1 }}>{price != null ? fmt.idx(price) : "\u2014"}</div>
         <div style={{ fontSize: 9, fontWeight: 600, color, display: "flex", alignItems: "center", gap: 2, whiteSpace: "nowrap" }}>
           <span style={{ fontSize: 6 }}>{change != null ? arrow : ""}</span>
           <span>{fmt.change(change)}</span>
@@ -165,12 +157,12 @@ function TickerBanner({ tickerData, sparklines }) {
     </div>
   );
   return (
-    <div style={{ background: C.card, borderRadius: 10, overflow: "hidden", marginBottom: 20, border: "1px solid " + C.border }}>
+    <div style={{ background: "#1a1a2e", borderRadius: 10, overflow: "hidden", marginBottom: 20, border: "1px solid #252547" }}>
       <div style={{ overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
         <style>{`.tb-s::-webkit-scrollbar{display:none}`}</style>
         <div className="tb-s" style={{ minWidth: 900 }}>
           {renderRow(TICKER_ROW1)}
-          <div style={{ borderTop: "1px solid " + C.border }} />
+          <div style={{ borderTop: "1px solid #2d2d44" }} />
           {renderRow(TICKER_ROW2)}
         </div>
       </div>
@@ -180,32 +172,32 @@ function TickerBanner({ tickerData, sparklines }) {
 
 /* ── PctCell ── */
 function PctCell({ value }) {
-  if (value == null) return <td style={{ ...tdR, color: "#555" }}>{"\u2014"}</td>;
+  if (value == null) return <td style={{ ...tdR, color: "#aaa" }}>{"\u2014"}</td>;
   const pos = value >= 0;
-  return <td style={tdR}><span style={{ color: pos ? C.green : C.red, background: pos ? C.greenBg : C.redBg, padding: "3px 8px", borderRadius: 5, fontSize: 12, fontWeight: 600, display: "inline-block", minWidth: 66, textAlign: "center" }}>{fmt.pct(value)}</span></td>;
+  return <td style={tdR}><span style={{ color: pos ? "#16a34a" : "#dc2626", background: pos ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)", padding: "3px 8px", borderRadius: 5, fontSize: 12, fontWeight: 600, display: "inline-block", minWidth: 66, textAlign: "center" }}>{fmt.pct(value)}</span></td>;
 }
 
 /* ── DailyCell ── */
 function DailyCell({ row }) {
-  if (row.changePct == null) return <td style={{ ...tdR, color: "#555" }}>{"\u2014"}</td>;
+  if (row.changePct == null) return <td style={{ ...tdR, color: "#aaa" }}>{"\u2014"}</td>;
   const pos = row.changePct >= 0;
   return (
     <td style={tdR}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 5 }}>
         <DailyCandle open={row.open} close={row.price} high={row.high} low={row.low} />
-        <span style={{ color: pos ? C.green : C.red, background: pos ? C.greenBg : C.redBg, padding: "3px 8px", borderRadius: 5, fontSize: 12, fontWeight: 600, display: "inline-block", minWidth: 66, textAlign: "center" }}>{fmt.pct(row.changePct)}</span>
+        <span style={{ color: pos ? "#16a34a" : "#dc2626", background: pos ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)", padding: "3px 8px", borderRadius: 5, fontSize: 12, fontWeight: 600, display: "inline-block", minWidth: 66, textAlign: "center" }}>{fmt.pct(row.changePct)}</span>
       </div>
     </td>
   );
 }
 
-const tdR = { padding: "12px 8px", textAlign: "right", fontSize: 13, color: C.text };
+const tdR = { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" };
 
 /* ══════════════════════════════════════════════ */
 export default function StockDashboard() {
   const [tickerData, setTickerData] = useState({});
   const [sparklines, setSparklines] = useState({});
-  const [stockRows, setStockRows] = useState([]);
+  const [stockRows, setStockRows] = useState([]); // always sorted by mcap (original rank)
   const [stockSpark, setStockSpark] = useState({});
   const [pinnedSymbols, setPinnedSymbols] = useState(() => {
     try { return JSON.parse(localStorage.getItem("pinned_stocks") || "[]"); } catch { return []; }
@@ -224,13 +216,17 @@ export default function StockDashboard() {
     });
   };
 
-  /* Sort: pinned first, then by original order */
-  const sortedRows = [...stockRows].sort((a, b) => {
-    const aPin = pinnedSymbols.includes(a.symbol) ? 0 : 1;
-    const bPin = pinnedSymbols.includes(b.symbol) ? 0 : 1;
-    if (aPin !== bPin) return aPin - bPin;
-    return (b.marketCap || 0) - (a.marketCap || 0);
-  });
+  /*
+   * Display order: pinned first, then unpinned.
+   * Each row carries its original rank (from stockRows index).
+   */
+  const displayRows = React.useMemo(() => {
+    // Assign original rank (1-based) to each row
+    const withRank = stockRows.map((r, i) => ({ ...r, rank: i + 1 }));
+    const pinned = withRank.filter(r => pinnedSymbols.includes(r.symbol));
+    const unpinned = withRank.filter(r => !pinnedSymbols.includes(r.symbol));
+    return [...pinned, ...unpinned];
+  }, [stockRows, pinnedSymbols]);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -244,128 +240,130 @@ export default function StockDashboard() {
       } catch {}
 
       if (quotes.length === 0) {
-        /* Fallback: chart only */
         try {
           const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(allSymbols) + "&range=1mo&interval=1d");
           const cd = await res.json();
           const tMap = {}, spMap = {}, stSpMap = {};
-          ALL_TICKERS.forEach(item => { const c = cd[item.symbol]; if (!c) return; const cl = c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[]; spMap[item.symbol]=cl; const prev=cl.length>=2?cl[cl.length-2]:null; const last=cl[cl.length-1]||null; if(last) tMap[item.symbol]={regularMarketPrice:last,regularMarketChange:prev?last-prev:null,regularMarketChangePercent:prev?((last-prev)/prev)*100:null}; });
+          ALL_TICKERS.forEach(item => { const c = cd[item.symbol]; if (!c) return; const cl = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || []; spMap[item.symbol] = cl; const prev = cl.length >= 2 ? cl[cl.length - 2] : null; const last = cl[cl.length - 1] || null; if (last) tMap[item.symbol] = { regularMarketPrice: last, regularMarketChange: prev ? last - prev : null, regularMarketChangePercent: prev ? ((last - prev) / prev) * 100 : null }; });
           setTickerData(tMap); setSparklines(spMap);
-          const rows = TOP_STOCKS.map(m => { const c=cd[m.symbol]; if(!c) return {symbol:m.symbol,name:m.name,price:null,marketCap:null,changePct:null,change7d:null,change30d:null,open:null,high:null,low:null}; const q=c.indicators?.quote?.[0]||{}; const cl=(q.close||[]).filter(v=>v!=null); const op=(q.open||[]).filter(v=>v!=null); const hi=(q.high||[]).filter(v=>v!=null); const lo=(q.low||[]).filter(v=>v!=null); const last=cl[cl.length-1]||null; const prev=cl.length>=2?cl[cl.length-2]:null; const p7=cl.length>=6?cl[cl.length-6]:null; const p30=cl[0]||null; stSpMap[m.symbol]=cl; return {symbol:m.symbol,name:m.name,price:last,marketCap:null,changePct:prev?((last-prev)/prev)*100:null,change7d:p7?((last-p7)/p7)*100:null,change30d:p30?((last-p30)/p30)*100:null,open:op[op.length-1]||null,high:hi[hi.length-1]||null,low:lo[lo.length-1]||null}; });
+          const rows = TOP_STOCKS.map(m => { const c = cd[m.symbol]; if (!c) return { symbol: m.symbol, name: m.name, price: null, marketCap: null, changePct: null, change7d: null, change30d: null, open: null, high: null, low: null }; const q = c.indicators?.quote?.[0] || {}; const cl = (q.close || []).filter(v => v != null); const op = (q.open || []).filter(v => v != null); const hi = (q.high || []).filter(v => v != null); const lo = (q.low || []).filter(v => v != null); const last = cl[cl.length - 1] || null; const prev = cl.length >= 2 ? cl[cl.length - 2] : null; const p7 = cl.length >= 6 ? cl[cl.length - 6] : null; const p30 = cl[0] || null; stSpMap[m.symbol] = cl; return { symbol: m.symbol, name: m.name, price: last, marketCap: null, changePct: prev ? ((last - prev) / prev) * 100 : null, change7d: p7 ? ((last - p7) / p7) * 100 : null, change30d: p30 ? ((last - p30) / p30) * 100 : null, open: op[op.length - 1] || null, high: hi[hi.length - 1] || null, low: lo[lo.length - 1] || null }; });
           setStockRows(rows); setStockSpark(stSpMap); setUpdated(new Date()); setLoading(false); return;
-        } catch(e) { setErr("Failed: "+e.message); setLoading(false); return; }
+        } catch (e) { setErr("Failed: " + e.message); setLoading(false); return; }
       }
 
-      /* Process v7 quotes */
       const tMap = {};
-      const ts = new Set(ALL_TICKERS.map(i=>i.symbol));
-      quotes.forEach(q => { if(ts.has(q.symbol)) tMap[q.symbol]=q; });
+      const ts = new Set(ALL_TICKERS.map(i => i.symbol));
+      quotes.forEach(q => { if (ts.has(q.symbol)) tMap[q.symbol] = q; });
       setTickerData(tMap);
 
-      const ss = new Set(TOP_STOCKS.map(s=>s.symbol));
+      const ss = new Set(TOP_STOCKS.map(s => s.symbol));
       const rows = [];
-      quotes.forEach(q => { if(!ss.has(q.symbol)) return; const m=TOP_STOCKS.find(s=>s.symbol===q.symbol); rows.push({symbol:q.symbol,name:m?.name||q.shortName||q.symbol,price:q.regularMarketPrice,marketCap:q.marketCap,changePct:q.regularMarketChangePercent,change7d:null,change30d:null,open:q.regularMarketOpen,high:q.regularMarketDayHigh,low:q.regularMarketDayLow}); });
-      rows.sort((a,b)=>(b.marketCap||0)-(a.marketCap||0));
+      quotes.forEach(q => { if (!ss.has(q.symbol)) return; const m = TOP_STOCKS.find(s => s.symbol === q.symbol); rows.push({ symbol: q.symbol, name: m?.name || q.shortName || q.symbol, price: q.regularMarketPrice, marketCap: q.marketCap, changePct: q.regularMarketChangePercent, change7d: null, change30d: null, open: q.regularMarketOpen, high: q.regularMarketDayHigh, low: q.regularMarketDayLow }); });
+      rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
       setStockRows(rows); setUpdated(new Date()); setLoading(false);
       fetchChartData(rows);
-    } catch(e) { setErr("Error: "+e.message); setLoading(false); }
+    } catch (e) { setErr("Error: " + e.message); setLoading(false); }
   }, []);
 
   const fetchChartData = useCallback(async (rows) => {
     try {
-      const allSym = [...ALL_TICKERS.map(i=>i.symbol), ...rows.map(r=>r.symbol)].join(",");
-      const res = await fetch("/api/stocks?type=chart&symbols="+encodeURIComponent(allSym)+"&range=1mo&interval=1d");
+      const allSym = [...ALL_TICKERS.map(i => i.symbol), ...rows.map(r => r.symbol)].join(",");
+      const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(allSym) + "&range=1mo&interval=1d");
       const cd = await res.json();
       const spMap = {}, stSpMap = {};
-      ALL_TICKERS.forEach(item => { const c=cd[item.symbol]; if(!c) return; spMap[item.symbol]=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[]; });
+      ALL_TICKERS.forEach(item => { const c = cd[item.symbol]; if (!c) return; spMap[item.symbol] = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || []; });
       setSparklines(spMap);
       setStockRows(prev => {
-        const u=[...prev];
-        for(const r of u) { const c=cd[r.symbol]; if(!c) continue; const cl=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[]; stSpMap[r.symbol]=cl; if(cl.length<2||!r.price) continue; const p7=cl.length>=6?cl[cl.length-6]:null; const p30=cl[0]||null; if(p7) r.change7d=((r.price-p7)/p7)*100; if(p30) r.change30d=((r.price-p30)/p30)*100; }
+        const u = [...prev];
+        for (const r of u) { const c = cd[r.symbol]; if (!c) continue; const cl = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || []; stSpMap[r.symbol] = cl; if (cl.length < 2 || !r.price) continue; const p7 = cl.length >= 6 ? cl[cl.length - 6] : null; const p30 = cl[0] || null; if (p7) r.change7d = ((r.price - p7) / p7) * 100; if (p30) r.change30d = ((r.price - p30) / p30) * 100; }
         return u;
       });
       setStockSpark(stSpMap);
-    } catch{}
+    } catch {}
   }, []);
 
-  useEffect(()=>{fetchAll();},[fetchAll]);
-  useEffect(()=>{
-    if(auto) timer.current=setInterval(fetchAll,120000);
-    return ()=>{if(timer.current) clearInterval(timer.current);};
-  },[auto,fetchAll]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    if (auto) timer.current = setInterval(fetchAll, 120000);
+    return () => { if (timer.current) clearInterval(timer.current); };
+  }, [auto, fetchAll]);
 
-  const th = { padding:"10px 8px", textAlign:"right", fontSize:10, color:C.textDim, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5, borderBottom:"1px solid "+C.border, whiteSpace:"nowrap", position:"sticky", top:0, background:C.card, zIndex:1 };
-  const thL = { ...th, textAlign:"left" };
+  const th = { padding: "10px 8px", textAlign: "right", fontSize: 10, color: "#8b8fa3", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "2px solid #ebedf2", whiteSpace: "nowrap", position: "sticky", top: 0, background: "#fff", zIndex: 1 };
+  const thL = { ...th, textAlign: "left" };
 
   return (
-    <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      <div style={{ maxWidth:1400, margin:"0 auto", padding:"20px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f5f8", color: "#111", fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 16px" }}>
+
         {/* Header */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h1 style={{ fontSize:22, fontWeight:800, margin:0, color:C.text, letterSpacing:-0.5 }}>Stock Dashboard</h1>
-            <div style={{ fontSize:12, color:C.textDim, marginTop:4 }}>Global Top 20 by Market Cap</div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "#1a1a2e", letterSpacing: -0.5 }}>Stock Dashboard</h1>
+            <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 4 }}>Global Top 20 by Market Cap &middot; Real-time via Yahoo Finance</div>
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:12, color:C.textDim }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 12, color: "#8b8fa3" }}>
             {updated && <span>{updated.toLocaleTimeString("en-US")}</span>}
-            <button onClick={fetchAll} style={{ background:C.accent, color:C.white, border:"none", borderRadius:6, padding:"6px 14px", fontSize:11, fontWeight:600, cursor:"pointer" }}>Refresh</button>
-            <label style={{ display:"flex", alignItems:"center", gap:5, cursor:"pointer" }}>
-              <input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)} style={{ accentColor:C.accent }} /> Auto 2min
+            <button onClick={fetchAll} style={{ background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Refresh</button>
+            <label style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }}>
+              <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} style={{ accentColor: "#1a1a2e" }} /> Auto 2min
             </label>
           </div>
         </div>
 
+        {/* Ticker Banner (dark) */}
         <TickerBanner tickerData={tickerData} sparklines={sparklines} />
 
-        {err && <div style={{ background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.3)", color:C.red, padding:"10px 16px", borderRadius:8, marginBottom:16, fontSize:13 }}>{err}</div>}
+        {err && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13 }}>{err}</div>}
 
+        {/* Table (light) */}
         {loading ? (
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:300, color:C.textDim }}>
-            <div style={{ textAlign:"center" }}><div style={{ fontSize:36, marginBottom:8 }}>{"\uD83D\uDCE1"}</div><p style={{ fontSize:14 }}>Loading market data...</p></div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#8b8fa3" }}>
+            <div style={{ textAlign: "center" }}><div style={{ fontSize: 36, marginBottom: 8 }}>{"\uD83D\uDCE1"}</div><p style={{ fontSize: 14 }}>Loading market data...</p></div>
           </div>
         ) : (
-          <div style={{ background:C.card, borderRadius:12, border:"1px solid "+C.border, overflow:"hidden" }}>
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ width:"100%", borderCollapse:"collapse", minWidth:900 }}>
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #ebedf2", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 920 }}>
                 <thead>
                   <tr>
-                    <th style={{ ...thL, width:28, textAlign:"center", padding:"10px 4px" }}></th>
-                    <th style={{ ...thL, width:32, textAlign:"center", padding:"10px 4px" }}>#</th>
-                    <th style={{ ...thL, minWidth:180 }}>Company</th>
+                    <th style={{ ...thL, width: 28, textAlign: "center", padding: "10px 2px" }}></th>
+                    <th style={{ ...thL, width: 32, textAlign: "center", padding: "10px 4px" }}>#</th>
+                    <th style={{ ...thL, minWidth: 170 }}>Company</th>
                     <th style={th}>Mcap</th>
                     <th style={th}>Price</th>
                     <th style={th}>Daily</th>
                     <th style={th}>7D</th>
                     <th style={th}>30D</th>
-                    <th style={{ ...th, textAlign:"center", minWidth:100 }}>Last 30 Days</th>
+                    <th style={{ ...th, textAlign: "center", minWidth: 100 }}>Last 30 Days</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedRows.map((r, idx) => {
+                  {displayRows.map((r) => {
                     const isPinned = pinnedSymbols.includes(r.symbol);
                     return (
-                      <tr key={r.symbol} style={{ borderBottom:"1px solid "+C.border, transition:"background .12s", background: isPinned ? "rgba(99,102,241,0.07)" : "transparent" }}
-                        onMouseEnter={e => { if(!isPinned) e.currentTarget.style.background=C.cardHover; }}
-                        onMouseLeave={e => { e.currentTarget.style.background= isPinned ? "rgba(99,102,241,0.07)" : "transparent"; }}>
-                        <td style={{ padding:"12px 4px", textAlign:"center" }}>
-                          <PinIcon pinned={isPinned} onClick={()=>togglePin(r.symbol)} />
+                      <tr key={r.symbol}
+                        style={{ borderBottom: "1px solid #f3f4f6", transition: "background .12s", background: isPinned ? "rgba(99,102,241,0.04)" : "#fff" }}
+                        onMouseEnter={e => e.currentTarget.style.background = isPinned ? "rgba(99,102,241,0.07)" : "#fafbfc"}
+                        onMouseLeave={e => e.currentTarget.style.background = isPinned ? "rgba(99,102,241,0.04)" : "#fff"}>
+                        <td style={{ padding: "12px 2px", textAlign: "center" }}>
+                          <PinIcon pinned={isPinned} onClick={() => togglePin(r.symbol)} />
                         </td>
-                        <td style={{ padding:"12px 4px", textAlign:"center", fontSize:11, color:C.textDim, fontWeight:600 }}>{idx+1}</td>
-                        <td style={{ padding:"12px 8px" }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <td style={{ padding: "12px 4px", textAlign: "center", fontSize: 11, color: "#b0b4c0", fontWeight: 600 }}>{r.rank}</td>
+                        <td style={{ padding: "12px 8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <CompanyLogo symbol={r.symbol} name={r.name} />
                             <div>
-                              <div style={{ fontWeight:600, fontSize:13, color:C.text }}>{r.name}</div>
-                              <div style={{ fontSize:10, color:C.textDim, fontWeight:500 }}>{r.symbol}</div>
+                              <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a2e" }}>{r.name}</div>
+                              <div style={{ fontSize: 10, color: "#8b8fa3", fontWeight: 500 }}>{r.symbol}</div>
                             </div>
                           </div>
                         </td>
-                        <td style={{ ...tdR, color:C.textDim, fontSize:12 }}>{fmt.mcap(r.marketCap)}</td>
-                        <td style={{ ...tdR, fontWeight:700, color:C.text, fontSize:14 }}>{fmt.price(r.price)}</td>
+                        <td style={{ ...tdR, color: "#666", fontSize: 12 }}>{fmt.mcap(r.marketCap)}</td>
+                        <td style={{ ...tdR, fontWeight: 700, color: "#1a1a2e", fontSize: 14 }}>{fmt.price(r.price)}</td>
                         <DailyCell row={r} />
                         <PctCell value={r.change7d} />
                         <PctCell value={r.change30d} />
-                        <td style={{ padding:"12px 8px", textAlign:"center" }}>
+                        <td style={{ padding: "12px 8px", textAlign: "center" }}>
                           <Spark30D data={stockSpark[r.symbol]} />
                         </td>
                       </tr>
@@ -377,8 +375,8 @@ export default function StockDashboard() {
           </div>
         )}
 
-        <div style={{ marginTop:16, textAlign:"center", fontSize:11, color:"#444466" }}>
-          <a href="https://www.allinvestview.com/tools/ticker-logos/" target="_blank" rel="noopener" style={{ color:"#444466", textDecoration:"none" }}>Logos by AllInvestView</a>
+        <div style={{ marginTop: 16, textAlign: "center", fontSize: 11, color: "#b0b4c0" }}>
+          <a href="https://www.allinvestview.com/tools/ticker-logos/" target="_blank" rel="noopener" style={{ color: "#b0b4c0", textDecoration: "none" }}>Logos by AllInvestView</a>
           {" "}&middot; Yahoo Finance &middot; Auto-refresh 2min
         </div>
       </div>
