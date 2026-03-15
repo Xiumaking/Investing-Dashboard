@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         "symbol","shortName","regularMarketPrice","regularMarketChange",
         "regularMarketChangePercent","marketCap","sharesOutstanding",
         "regularMarketOpen","regularMarketDayHigh","regularMarketDayLow",
-        "regularMarketVolume"
+        "regularMarketVolume","currency"
       ].join(",");
 
       const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}&fields=${fields}&crumb=${encodeURIComponent(crumb)}`;
