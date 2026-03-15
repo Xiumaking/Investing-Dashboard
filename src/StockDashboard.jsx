@@ -105,8 +105,62 @@ const STOCKS = [
   { symbol: "BTM", name: "Bitcoin Depot", country: "US" },
   { symbol: "OKLO", name: "Oklo", country: "US" },
   { symbol: "SPOT", name: "Spotify", country: "US" },
-  { symbol: "0100.HK", name: "MiniMax", country: "HK" },
-  { symbol: "0728.HK", name: "China Telecom", country: "HK" },
+  { symbol: "0100.HK", name: "MiniMax", country: "CN" },
+  { symbol: "0728.HK", name: "China Telecom", country: "CN" },
+  { symbol: "3558.HK", name: "강소장전기술", country: "CN" },
+  { symbol: "0300.HK", name: "메이디그룹", country: "CN" },
+  { symbol: "2747.HK", name: "애사돈자동화", country: "CN" },
+  { symbol: "0941.HK", name: "차이나모바일", country: "CN" },
+  { symbol: "0241.HK", name: "알리헬스", country: "CN" },
+  { symbol: "1810.HK", name: "샤오미", country: "CN" },
+  { symbol: "3690.HK", name: "메이투안", country: "CN" },
+  { symbol: "9988.HK", name: "알리바바", country: "CN" },
+  { symbol: "0700.HK", name: "텐센트", country: "CN" },
+  { symbol: "9999.HK", name: "넷이즈", country: "CN" },
+  { symbol: "0268.HK", name: "랑조전자신식산업", country: "CN" },
+  { symbol: "1665.HK", name: "입신정밀", country: "CN" },
+  { symbol: "6865.HK", name: "북방화창", country: "CN" },
+  { symbol: "9618.HK", name: "징동닷컴", country: "CN" },
+  { symbol: "6618.HK", name: "징동헬스", country: "CN" },
+  { symbol: "6686.HK", name: "에딩제노르", country: "CN" },
+  { symbol: "0780.HK", name: "통청트래블", country: "CN" },
+  { symbol: "1801.HK", name: "이노벤트바이오", country: "CN" },
+  { symbol: "1024.HK", name: "콰이쇼우", country: "CN" },
+  { symbol: "2096.HK", name: "상하이준시바이오", country: "CN" },
+  { symbol: "0772.HK", name: "이두테크", country: "CN" },
+  { symbol: "6060.HK", name: "중안보험", country: "CN" },
+  { symbol: "2137.HK", name: "JW테라퓨틱스", country: "CN" },
+  { symbol: "0032.HK", name: "파사등인터내셔널", country: "CN" },
+  { symbol: "2170.HK", name: "비원메디슨스", country: "CN" },
+  { symbol: "1890.HK", name: "중공교육과기", country: "CN" },
+  { symbol: "4052.HK", name: "아이플라이텍", country: "CN" },
+  { symbol: "0175.HK", name: "길리자동차", country: "CN" },
+  { symbol: "2013.HK", name: "웨이몹", country: "CN" },
+  { symbol: "3033.HK", name: "옥삼바이오", country: "CN" },
+  { symbol: "2268.HK", name: "우시앱텍", country: "CN" },
+  { symbol: "0600.HK", name: "상해국제공항", country: "CN" },
+  { symbol: "2318.HK", name: "중국평안보험A", country: "CN" },
+  { symbol: "0601.HK", name: "중국평안보험B", country: "CN" },
+  { symbol: "0696.HK", name: "중항광전", country: "CN" },
+  { symbol: "1177.HK", name: "오새강제약", country: "CN" },
+  { symbol: "6969.HK", name: "수보얼", country: "CN" },
+  { symbol: "0522.HK", name: "격력전기", country: "CN" },
+  { symbol: "6862.HK", name: "러반전기", country: "CN" },
+  { symbol: "1099.HK", name: "국약그룹", country: "CN" },
+  { symbol: "2048.HK", name: "프로야화장품", country: "CN" },
+  { symbol: "1882.HK", name: "해천미업", country: "CN" },
+  { symbol: "6567.HK", name: "산서행화촌분주", country: "CN" },
+  { symbol: "1499.HK", name: "귀주모태주", country: "CN" },
+  { symbol: "0291.HK", name: "중경맥주", country: "CN" },
+  { symbol: "3750.HK", name: "천제리튬(CATL)", country: "CN" },
+  { symbol: "1289.HK", name: "강봉이업(리튬)", country: "CN" },
+  { symbol: "3908.HK", name: "중국중면", country: "CN" },
+  { symbol: "0867.HK", name: "항서의약", country: "CN" },
+  { symbol: "2269.HK", name: "우시바이오", country: "CN" },
+  { symbol: "1833.HK", name: "평안굿닥터", country: "CN" },
+  { symbol: "1211.HK", name: "BYD", country: "CN" },
+  { symbol: "6690.HK", name: "하이얼스마트홈", country: "CN" },
+  { symbol: "0020.HK", name: "센스타임", country: "CN" },
   { symbol: "003690.KS", name: "코리안리", country: "KR" },
   { symbol: "001450.KS", name: "현대해상", country: "KR" },
   { symbol: "000810.KS", name: "삼성화재", country: "KR" },
@@ -162,7 +216,7 @@ const LOGO_DOMAINS = {
 
 const COUNTRY_FILTERS = [
   { key: "US", label: "US" },
-  { key: "HK", label: "Hong Kong" },
+  { key: "CN", label: "China" },
   { key: "KR", label: "Korea" },
 ];
 
@@ -171,7 +225,7 @@ function FlagSVG({ country, size = 20 }) {
   const h = Math.round(size * 0.67);
   const s = { borderRadius: 3, display: "block", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 };
   if (country === "US") return (<svg width={size} height={h} viewBox="0 0 60 42" style={s}>{[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i=><rect key={i} y={i*3.23} width="60" height="3.23" fill={i%2===0?"#B22234":"#fff"}/>)}<rect width="24" height="22.61" fill="#3C3B6E"/>{[...Array(50)].map((_,i)=>{const row=Math.floor(i/6),col=i%6;if(row%2===1&&col>=5)return null;const cx=row%2===0?2+col*4:4+col*4;const cy=1.5+row*2.1;return<circle key={i} cx={cx} cy={cy} r="0.7" fill="#fff"/>;})}</svg>);
-  if (country === "HK") return (<svg width={size} height={h} viewBox="0 0 60 40" style={s}><rect width="60" height="40" fill="#DE2910"/>{[0,1,2,3,4].map(i=>{const a=(i*72-90)*Math.PI/180;const cx=30+Math.cos(a)*8;const cy=20+Math.sin(a)*8;return<ellipse key={i} cx={cx} cy={cy} rx="2.5" ry="5" fill="#fff" transform={`rotate(${i*72},${cx},${cy})`}/>;})}</svg>);
+  if (country === "CN") return (<svg width={size} height={h} viewBox="0 0 60 40" style={s}><rect width="60" height="40" fill="#DE2910"/><g transform="translate(10,8)"><polygon points="0,-6 1.4,-1.8 6.6,-1.8 2.4,1 3.6,5.8 0,2.6 -3.6,5.8 -2.4,1 -6.6,-1.8 -1.4,-1.8" fill="#FFDE00"/></g>{[[18,3],[21,6],[21,10],[18,13]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="1.2" fill="#FFDE00"/>)}</svg>);
   if (country === "KR") return (<svg width={size} height={h} viewBox="0 0 60 40" style={s}><rect width="60" height="40" fill="#fff"/><circle cx="30" cy="20" r="10" fill="#C60C30"/><clipPath id="krb"><circle cx="30" cy="20" r="10"/></clipPath><path d="M20 20 Q30 10 40 20 Q30 30 20 20" fill="#003478" clipPath="url(#krb)"/><rect x="42" y="8" width="2" height="10" fill="#000" transform="rotate(33,46,13)"/><rect x="45" y="8" width="2" height="10" fill="#000" transform="rotate(33,49,13)"/><rect x="42" y="24" width="2" height="10" fill="#000" transform="rotate(-33,46,29)"/><rect x="45" y="24" width="2" height="10" fill="#000" transform="rotate(-33,49,29)"/><rect x="12" y="8" width="2" height="10" fill="#000" transform="rotate(-33,14,13)"/><rect x="15" y="8" width="2" height="10" fill="#000" transform="rotate(-33,17,13)"/><rect x="12" y="24" width="2" height="10" fill="#000" transform="rotate(33,14,29)"/><rect x="15" y="24" width="2" height="10" fill="#000" transform="rotate(33,17,29)"/></svg>);
   return null;
 }
@@ -181,7 +235,7 @@ const fmt = {
   price(p, country) {
     if (p == null || p === 0) return "\u2014";
     if (country === "KR") return "\u20A9" + Math.round(p).toLocaleString("ko-KR");
-    if (country === "HK") return "HK$" + p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (country === "CN") return "HK$" + p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 });
     if (Math.abs(p) >= 1000) return "$" + p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (Math.abs(p) >= 1) return "$" + p.toFixed(2);
     return "$" + p.toFixed(4);
@@ -242,7 +296,7 @@ export default function StockDashboard() {
   const toUSD = useCallback((mcap, country) => {
     if (mcap == null) return null;
     if (country === "KR") return fxRates.KRW > 0 ? mcap / fxRates.KRW : null;
-    if (country === "HK") return fxRates.HKD > 0 ? mcap / fxRates.HKD : null;
+    if (country === "CN") return fxRates.HKD > 0 ? mcap / fxRates.HKD : null;
     return mcap; // US already in USD
   }, [fxRates]);
 
