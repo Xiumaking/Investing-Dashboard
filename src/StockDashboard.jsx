@@ -18,7 +18,6 @@ const ALL_TICKERS = [...TICKER_ROW1, ...TICKER_ROW2];
 
 /* ── Stock List ── */
 const STOCKS = [
-  // US
   { symbol: "NVDA", name: "NVIDIA", country: "US" },
   { symbol: "AAPL", name: "Apple", country: "US" },
   { symbol: "GOOGL", name: "Alphabet", country: "US" },
@@ -48,10 +47,8 @@ const STOCKS = [
   { symbol: "CRCL", name: "Circle Internet", country: "US" },
   { symbol: "LUNR", name: "Intuitive Machines", country: "US" },
   { symbol: "GME", name: "GameStop", country: "US" },
-  // HK
   { symbol: "0100.HK", name: "MiniMax", country: "HK" },
   { symbol: "0728.HK", name: "China Telecom", country: "HK" },
-  // KR (KOSPI = .KS, KOSDAQ = .KQ)
   { symbol: "003690.KS", name: "코리안리", country: "KR" },
   { symbol: "001450.KS", name: "현대해상", country: "KR" },
   { symbol: "000810.KS", name: "삼성화재", country: "KR" },
@@ -92,9 +89,8 @@ const LOGO_DOMAINS = {
   CRCL:"circle.com",LUNR:"intuitivemachines.com",GME:"gamestop.com",
 };
 
-/* ── Country Filters ── */
+/* ── Country Filters (no ALL) ── */
 const COUNTRY_FILTERS = [
-  { key: "ALL", label: "All" },
   { key: "US", label: "US" },
   { key: "HK", label: "Hong Kong" },
   { key: "KR", label: "Korea" },
@@ -124,8 +120,8 @@ function FlagSVG({ country, size = 20 }) {
     <svg width={size} height={h} viewBox="0 0 60 40" style={s}>
       <rect width="60" height="40" fill="#fff" />
       <circle cx="30" cy="20" r="10" fill="#C60C30" />
-      <clipPath id="krbot"><circle cx="30" cy="20" r="10" /></clipPath>
-      <path d="M20 20 Q30 10 40 20 Q30 30 20 20" fill="#003478" clipPath="url(#krbot)" />
+      <clipPath id="krb"><circle cx="30" cy="20" r="10" /></clipPath>
+      <path d="M20 20 Q30 10 40 20 Q30 30 20 20" fill="#003478" clipPath="url(#krb)" />
       <rect x="42" y="8" width="2" height="10" fill="#000" transform="rotate(33,46,13)" />
       <rect x="45" y="8" width="2" height="10" fill="#000" transform="rotate(33,49,13)" />
       <rect x="42" y="24" width="2" height="10" fill="#000" transform="rotate(-33,46,29)" />
@@ -137,7 +133,7 @@ function FlagSVG({ country, size = 20 }) {
     </svg>
   );
 
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#8b8fa3" strokeWidth="1.5" style={{ display: "block" }}><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z" /></svg>;
+  return null;
 }
 
 /* ── Formatters ── */
@@ -151,20 +147,48 @@ const fmt = {
     return "$" + p.toFixed(4);
   },
   idx(p) { return p == null ? "\u2014" : p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-  mcap(m) {
+  mcap(m, country) {
+    if (m == null) return "\u2014";
+    const prefix = country === "KR" ? "\u20A9" : country === "HK" ? "HK$" : "$";
+    if (m >= 1e12) return prefix + (m / 1e12).toFixed(2) + "T";
+    if (m >= 1e9) return prefix + (m / 1e9).toFixed(1) + "B";
+    if (m >= 1e8) return prefix + (m / 1e8).toFixed(1) + "\uc5B5"; // 억 for KR
+    if (m >= 1e6) return prefix + (m / 1e6).toFixed(0) + "M";
+    return prefix + m.toLocaleString();
+  },
+  mcapKR(m) {
+    if (m == null) return "\u2014";
+    if (m >= 1e16) return (m / 1e12).toFixed(1) + "\uc870"; // 조
+    if (m >= 1e12) return (m / 1e12).toFixed(2) + "\uc870";
+    if (m >= 1e8) return (m / 1e8).toFixed(0) + "\uc5B5";
+    return m.toLocaleString("ko-KR");
+  },
+  mcapHK(m) {
+    if (m == null) return "\u2014";
+    if (m >= 1e12) return "HK$" + (m / 1e12).toFixed(2) + "T";
+    if (m >= 1e9) return "HK$" + (m / 1e9).toFixed(1) + "B";
+    if (m >= 1e6) return "HK$" + (m / 1e6).toFixed(0) + "M";
+    return "HK$" + m.toLocaleString();
+  },
+  mcapUS(m) {
     if (m == null) return "\u2014";
     if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T";
     if (m >= 1e9) return "$" + (m / 1e9).toFixed(1) + "B";
     if (m >= 1e6) return "$" + (m / 1e6).toFixed(0) + "M";
     return "$" + m.toLocaleString();
   },
+  fmtMcap(m, country) {
+    if (country === "KR") return fmt.mcapKR(m);
+    if (country === "HK") return fmt.mcapHK(m);
+    return fmt.mcapUS(m);
+  },
   pct(v) { return v == null ? "\u2014" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; },
   change(v) { return v == null ? "" : (v >= 0 ? "+" : "") + v.toFixed(2); },
 };
 
 /* ── Shared Components ── */
-function MiniSpark({ data, width = 44, height = 18 }) {
-  if (!data || data.filter(v=>v!=null).length<3) return <div style={{width,height}}/>;
+function MiniSpark({ data, width=44, height=18 }) {
+  if(!data||data.filter(v=>v!=null).length<3) return <div style={{width,height}}/>;
   const cl=data.filter(v=>v!=null),mn=Math.min(...cl),mx=Math.max(...cl),r=mx-mn||1,up=cl[cl.length-1]>=cl[0];
   const pts=cl.map((v,i)=>((i/(cl.length-1))*width).toFixed(1)+","+(height-((v-mn)/r)*(height-2)-1).toFixed(1)).join(" ");
   return <svg width={width} height={height} style={{display:"block",flexShrink:0}}><polyline points={pts} fill="none" stroke={up?"#16a34a":"#dc2626"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
@@ -268,7 +292,7 @@ export default function StockDashboard() {
   const [sparklines,setSparklines]=useState({});
   const [stockRows,setStockRows]=useState([]);
   const [stockSpark,setStockSpark]=useState({});
-  const [countryFilter,setCountryFilter]=useState("ALL");
+  const [countryFilter,setCountryFilter]=useState("US");
   const [pinnedSymbols,setPinnedSymbols]=useState(()=>{try{return JSON.parse(localStorage.getItem("pinned_stocks")||"[]");}catch{return[];}});
   const [loading,setLoading]=useState(true);
   const [err,setErr]=useState(null);
@@ -278,16 +302,17 @@ export default function StockDashboard() {
 
   const togglePin=symbol=>{setPinnedSymbols(prev=>{const next=prev.includes(symbol)?prev.filter(s=>s!==symbol):[...prev,symbol];try{localStorage.setItem("pinned_stocks",JSON.stringify(next));}catch{}return next;});};
 
+  /* Per-country mcap ranking */
   const displayRows=React.useMemo(()=>{
-    const sorted=[...stockRows].sort((a,b)=>(b.marketCap||0)-(a.marketCap||0));
+    const countryStocks=stockRows.filter(r=>r.country===countryFilter);
+    const sorted=[...countryStocks].sort((a,b)=>(b.marketCap||0)-(a.marketCap||0));
     const withRank=sorted.map((r,i)=>({...r,rank:i+1}));
-    const filtered=countryFilter==="ALL"?withRank:withRank.filter(r=>r.country===countryFilter);
-    const pinned=filtered.filter(r=>pinnedSymbols.includes(r.symbol));
-    const unpinned=filtered.filter(r=>!pinnedSymbols.includes(r.symbol));
+    const pinned=withRank.filter(r=>pinnedSymbols.includes(r.symbol));
+    const unpinned=withRank.filter(r=>!pinnedSymbols.includes(r.symbol));
     return [...pinned,...unpinned];
   },[stockRows,countryFilter,pinnedSymbols]);
 
-  const countryCounts=React.useMemo(()=>{const c={ALL:stockRows.length};stockRows.forEach(r=>{c[r.country]=(c[r.country]||0)+1;});return c;},[stockRows]);
+  const countryCounts=React.useMemo(()=>{const c={};stockRows.forEach(r=>{c[r.country]=(c[r.country]||0)+1;});return c;},[stockRows]);
 
   const fetchAll=useCallback(async()=>{
     try{
@@ -402,7 +427,7 @@ export default function StockDashboard() {
                         onMouseLeave={e=>e.currentTarget.style.background=isPinned?"rgba(99,102,241,0.04)":"#fff"}>
                         <td style={{padding:"12px 4px",textAlign:"center",fontSize:11,color:"#b0b4c0",fontWeight:600}}>{r.rank}</td>
                         <CompanyCell row={r} isPinned={isPinned} onTogglePin={togglePin}/>
-                        <td style={{...tdR,color:"#666",fontSize:12}}>{fmt.mcap(r.marketCap)}</td>
+                        <td style={{...tdR,color:"#666",fontSize:12}}>{fmt.fmtMcap(r.marketCap,r.country)}</td>
                         <td style={{...tdR,fontWeight:700,color:"#1a1a2e",fontSize:14}}>{fmt.price(r.price,r.country)}</td>
                         <DailyCell row={r}/>
                         <PctCell value={r.change7d}/>
