@@ -11,15 +11,13 @@ async function getCookieAndCrumb() {
     return { cookie: cachedCookie, crumb: cachedCrumb };
   }
 
-  // Step 1: Get cookie from Yahoo
   const cookieRes = await fetch("https://fc.yahoo.com", {
     redirect: "manual",
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
   });
   const setCookie = cookieRes.headers.get("set-cookie") || "";
-  const cookie = setCookie.split(";")[0]; // e.g. "A1=d=AQ..."
+  const cookie = setCookie.split(";")[0];
 
-  // Step 2: Get crumb using the cookie
   const crumbRes = await fetch("https://query2.finance.yahoo.com/v1/test/getcrumb", {
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -34,7 +32,7 @@ async function getCookieAndCrumb() {
 
   cachedCookie = cookie;
   cachedCrumb = crumb;
-  crumbExpiry = now + 5 * 60 * 1000; // cache 5 min
+  crumbExpiry = now + 5 * 60 * 1000;
 
   return { cookie, crumb };
 }
@@ -64,7 +62,6 @@ export default async function handler(req, res) {
     }
 
     if (type === "chart") {
-      // v8 chart API (no auth needed) — batch multiple symbols
       const symbols = (req.query.symbols || "").split(",");
       const range = req.query.range || "1mo";
       const interval = req.query.interval || "1d";
@@ -89,7 +86,6 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: "Use ?type=quote&symbols=... or ?type=chart&symbols=...&range=1mo" });
   } catch (error) {
-    // If cookie/crumb fails, try to reset cache
     cachedCookie = null;
     cachedCrumb = null;
     crumbExpiry = 0;
