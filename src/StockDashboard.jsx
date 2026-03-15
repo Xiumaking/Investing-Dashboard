@@ -4,31 +4,25 @@ import React from "react";
 /*
  * ══════════════════════════════════════════════════════════════
  *  Stock Dashboard — Yahoo Finance via Vercel Serverless Proxy
- *  API Key 불필요, CORS 문제 없음, 무료
- *  /api/stocks?type=quote&symbols=... → batch quote
- *  /api/stocks?type=history&symbol=...&range=1mo → OHLCV
+ *  API Key 불필요, CORS 문제 없음, 무료 무제한
  * ══════════════════════════════════════════════════════════════
  */
 
 /* ── 상단 배너 지수 목록 (Yahoo Finance 심볼) ── */
 const INDICES = [
-  // US Spot
-  { symbol: "^DJI",   name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
-  { symbol: "^GSPC",  name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
-  { symbol: "^IXIC",  name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
-  // US Futures
-  { symbol: "YM=F",   name: "Dow Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
-  { symbol: "ES=F",   name: "S&P Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
-  { symbol: "NQ=F",   name: "Nasdaq Futures", flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
-  // China
-  { symbol: "399001.SZ", name: "Shenzhen Comp", flag: "\u{1F1E8}\u{1F1F3}", group: "China" },
-  { symbol: "^HSI",      name: "Hang Seng",     flag: "\u{1F1ED}\u{1F1F0}", group: "China" },
-  // Korea
-  { symbol: "^KS11",  name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
-  { symbol: "^KQ11",  name: "KOSDAQ",         flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+  { symbol: "^DJI",      name: "Dow Jones",      flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
+  { symbol: "^GSPC",     name: "S&P 500",        flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
+  { symbol: "^IXIC",     name: "Nasdaq",         flag: "\u{1F1FA}\u{1F1F8}", group: "US Spot" },
+  { symbol: "YM=F",      name: "Dow Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "ES=F",      name: "S&P Futures",    flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "NQ=F",      name: "Nasdaq Futures", flag: "\u{1F1FA}\u{1F1F8}", group: "US Futures" },
+  { symbol: "399001.SZ", name: "Shenzhen",       flag: "\u{1F1E8}\u{1F1F3}", group: "China" },
+  { symbol: "^HSI",      name: "Hang Seng",      flag: "\u{1F1ED}\u{1F1F0}", group: "China" },
+  { symbol: "^KS11",     name: "KOSPI",          flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
+  { symbol: "^KQ11",     name: "KOSDAQ",         flag: "\u{1F1F0}\u{1F1F7}", group: "Korea" },
 ];
 
-/* ── 글로벌 시총 Top 20 종목 (2026-02 기준) ── */
+/* ── 글로벌 시총 Top 20 종목 ── */
 const TOP_STOCKS = [
   { symbol: "NVDA",  name: "NVIDIA" },
   { symbol: "AAPL",  name: "Apple" },
@@ -92,7 +86,7 @@ function IndexCard({ data }) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
         <span style={{ fontSize: 14 }}>{data?.flag}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280" }}>{data?.label || data?.shortName || data?.symbol}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280" }}>{data?.label}</span>
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: "#111" }}>
         {price != null ? fmtIdx(price) : "\u2014"}
@@ -109,9 +103,9 @@ function IndexCard({ data }) {
 function IndexBanner({ indexQuotes }) {
   const groups = {};
   INDICES.forEach(idx => {
-    const data = indexQuotes[idx.symbol];
+    const q = indexQuotes[idx.symbol] || {};
     if (!groups[idx.group]) groups[idx.group] = [];
-    groups[idx.group].push({ ...idx, ...(data || {}), label: idx.name, flag: idx.flag });
+    groups[idx.group].push({ ...q, label: idx.name, flag: idx.flag, symbol: idx.symbol });
   });
 
   return (
@@ -122,9 +116,7 @@ function IndexBanner({ indexQuotes }) {
             {groupName}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {items.map(item => (
-              <IndexCard key={item.symbol} data={item} />
-            ))}
+            {items.map(item => <IndexCard key={item.symbol} data={item} />)}
           </div>
         </div>
       ))}
@@ -151,7 +143,7 @@ function PctCell({ value }) {
 
 const tdR = { padding: "12px 8px", textAlign: "right", fontSize: 13, color: "#374151" };
 
-/* ── Main Stock Dashboard ── */
+/* ── Main Dashboard ── */
 export default function StockDashboard() {
   const [indexQuotes, setIndexQuotes] = useState({});
   const [stockRows, setStockRows] = useState([]);
@@ -161,40 +153,91 @@ export default function StockDashboard() {
   const [auto, setAuto] = useState(true);
   const timer = useRef(null);
 
-  /* ── Fetch everything in 1 batch call ── */
   const fetchAll = useCallback(async () => {
     try {
       setErr(null);
 
-      // Combine all symbols into ONE request
+      // 1) Try v7 quote (with cookie+crumb via our proxy)
       const allSymbols = [
         ...INDICES.map(i => i.symbol),
         ...TOP_STOCKS.map(s => s.symbol),
       ].join(",");
 
-      const res = await fetch("/api/stocks?type=quote&symbols=" + encodeURIComponent(allSymbols));
-      const json = await res.json();
+      let quotes = [];
+      try {
+        const res = await fetch("/api/stocks?type=quote&symbols=" + encodeURIComponent(allSymbols));
+        const json = await res.json();
+        quotes = json?.quoteResponse?.result || [];
+      } catch { /* will fallback to chart */ }
 
-      const quotes = json?.quoteResponse?.result || [];
+      // 2) If quote failed, fallback to v8 chart API
       if (quotes.length === 0) {
-        setErr("No data returned. The API may be temporarily unavailable.");
-        setLoading(false);
-        return;
+        try {
+          const stockSymbols = TOP_STOCKS.map(s => s.symbol).join(",");
+          const indexSymbols = INDICES.map(i => i.symbol).join(",");
+          const allSym = stockSymbols + "," + indexSymbols;
+
+          const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(allSym) + "&range=1mo&interval=1d");
+          const chartData = await res.json();
+
+          // Build index data from chart
+          const idxMap = {};
+          INDICES.forEach(idx => {
+            const c = chartData[idx.symbol];
+            if (!c) return;
+            const closes = c.indicators?.quote?.[0]?.close || [];
+            const prev = closes.length >= 2 ? closes[closes.length - 2] : null;
+            const last = closes.length >= 1 ? closes[closes.length - 1] : null;
+            if (last) {
+              idxMap[idx.symbol] = {
+                regularMarketPrice: last,
+                regularMarketChange: prev ? last - prev : null,
+                regularMarketChangePercent: prev ? ((last - prev) / prev) * 100 : null,
+              };
+            }
+          });
+          setIndexQuotes(idxMap);
+
+          // Build stock rows from chart
+          const rows = TOP_STOCKS.map(meta => {
+            const c = chartData[meta.symbol];
+            if (!c) return { symbol: meta.symbol, name: meta.name, price: null, marketCap: null, changePct: null, change7d: null, change30d: null };
+            const closes = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
+            const last = closes[closes.length - 1] || null;
+            const prev = closes.length >= 2 ? closes[closes.length - 2] : null;
+            const p7d = closes.length >= 6 ? closes[closes.length - 6] : null;
+            const p30d = closes[0] || null;
+            return {
+              symbol: meta.symbol,
+              name: meta.name,
+              price: last,
+              marketCap: null,
+              changePct: prev ? ((last - prev) / prev) * 100 : null,
+              change7d: p7d ? ((last - p7d) / p7d) * 100 : null,
+              change30d: p30d ? ((last - p30d) / p30d) * 100 : null,
+            };
+          });
+          setStockRows(rows);
+          setUpdated(new Date());
+          setLoading(false);
+          return;
+        } catch (e) {
+          setErr("Failed to fetch data: " + e.message);
+          setLoading(false);
+          return;
+        }
       }
 
-      // Build index map
+      // 3) Process v7 quote results
       const idxMap = {};
       const indexSymbols = new Set(INDICES.map(i => i.symbol));
-      quotes.forEach(q => {
-        if (indexSymbols.has(q.symbol)) idxMap[q.symbol] = q;
-      });
+      quotes.forEach(q => { if (indexSymbols.has(q.symbol)) idxMap[q.symbol] = q; });
       setIndexQuotes(idxMap);
 
-      // Build stock rows
-      const stockSymbols = new Set(TOP_STOCKS.map(s => s.symbol));
+      const stockSymbolSet = new Set(TOP_STOCKS.map(s => s.symbol));
       const rows = [];
       quotes.forEach(q => {
-        if (!stockSymbols.has(q.symbol)) return;
+        if (!stockSymbolSet.has(q.symbol)) return;
         const meta = TOP_STOCKS.find(s => s.symbol === q.symbol);
         rows.push({
           symbol: q.symbol,
@@ -206,74 +249,45 @@ export default function StockDashboard() {
           change30d: null,
         });
       });
-
-      // Sort by market cap (descending)
       rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
       setStockRows(rows);
       setUpdated(new Date());
       setLoading(false);
 
-      // Fetch 7D/30D changes in background
+      // Fetch 7D/30D via chart in background
       fetchHistorical(rows);
     } catch (e) {
-      setErr("Failed to fetch: " + e.message);
+      setErr("Error: " + e.message);
       setLoading(false);
     }
   }, []);
 
-  /* ── Fetch 1mo history for each stock to calc 7D/30D ── */
   const fetchHistorical = useCallback(async (rows) => {
     try {
-      // Fetch all in parallel — each goes through our serverless proxy
-      const promises = rows.map(async (r) => {
-        try {
-          const res = await fetch("/api/stocks?type=history&symbol=" + encodeURIComponent(r.symbol) + "&range=1mo");
-          const json = await res.json();
-          const result = json?.chart?.result?.[0];
-          if (!result) return { symbol: r.symbol };
-
-          const closes = result.indicators?.quote?.[0]?.close || [];
-          const timestamps = result.timestamp || [];
-          return { symbol: r.symbol, closes, timestamps };
-        } catch {
-          return { symbol: r.symbol };
-        }
-      });
-
-      const results = await Promise.all(promises);
+      const symbols = rows.map(r => r.symbol).join(",");
+      const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(symbols) + "&range=1mo&interval=1d");
+      const chartData = await res.json();
 
       setStockRows(prev => {
         const updated = [...prev];
-        const now = Date.now() / 1000;
-
-        for (const { symbol, closes, timestamps } of results) {
-          if (!closes || !timestamps || closes.length < 2) continue;
-          const row = updated.find(r => r.symbol === symbol);
-          if (!row || !row.price) continue;
-
-          const currentPrice = row.price;
-
-          // Find price ~7 days ago
-          const t7d = now - 7 * 86400;
-          let price7d = null;
-          for (let i = timestamps.length - 1; i >= 0; i--) {
-            if (timestamps[i] <= t7d) { price7d = closes[i]; break; }
-          }
-          if (!price7d && closes.length >= 6) price7d = closes[closes.length - 6];
-          if (price7d) row.change7d = ((currentPrice - price7d) / price7d) * 100;
-
-          // Find price ~30 days ago (first in array)
-          const price30d = closes[0];
-          if (price30d) row.change30d = ((currentPrice - price30d) / price30d) * 100;
+        for (const r of updated) {
+          const c = chartData[r.symbol];
+          if (!c) continue;
+          const closes = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
+          if (closes.length < 2 || !r.price) continue;
+          const p7d = closes.length >= 6 ? closes[closes.length - 6] : null;
+          const p30d = closes[0] || null;
+          if (p7d) r.change7d = ((r.price - p7d) / p7d) * 100;
+          if (p30d) r.change30d = ((r.price - p30d) / p30d) * 100;
         }
         return updated;
       });
-    } catch (e) { /* silent */ }
+    } catch { /* silent */ }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
   useEffect(() => {
-    if (auto) timer.current = setInterval(fetchAll, 120000); // 2min
+    if (auto) timer.current = setInterval(fetchAll, 120000);
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [auto, fetchAll]);
 
