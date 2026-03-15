@@ -3,29 +3,33 @@ import React from "react";
 
 /*
  * ══════════════════════════════════════════════════════════════
- *  Stock Dashboard — Yahoo Finance style ticker banner
- *  Vercel Serverless Proxy → Yahoo Finance
- *  No API key needed
+ *  Stock Dashboard — Yahoo Finance style
+ *  2-row ticker banner with mini sparklines
+ *  Company CI logos, daily candle indicators
  * ══════════════════════════════════════════════════════════════
  */
 
-/* ── 상단 티커 배너 (Yahoo Finance 스타일) ── */
-const TICKER_ITEMS = [
-  { symbol: "^DJI",      label: "Dow 30" },
-  { symbol: "^GSPC",     label: "S&P 500" },
-  { symbol: "^IXIC",     label: "Nasdaq" },
-  { symbol: "^RUT",      label: "Russell 2000" },
-  { symbol: "^VIX",      label: "VIX" },
-  { symbol: "GC=F",      label: "Gold" },
-  { symbol: "SI=F",      label: "Silver" },
-  { symbol: "CL=F",      label: "Crude Oil" },
+/* ── 티커 배너: 1행 (8개까지), 나머지 2행 ── */
+const TICKER_ROW1 = [
+  { symbol: "^DJI",   label: "Dow 30" },
+  { symbol: "^GSPC",  label: "S&P 500" },
+  { symbol: "^IXIC",  label: "Nasdaq" },
+  { symbol: "^RUT",   label: "Russell 2000" },
+  { symbol: "^VIX",   label: "VIX" },
+  { symbol: "GC=F",   label: "Gold" },
+  { symbol: "SI=F",   label: "Silver" },
+  { symbol: "CL=F",   label: "Crude Oil" },
+];
+const TICKER_ROW2 = [
   { symbol: "ES=F",      label: "S&P Futures" },
   { symbol: "NQ=F",      label: "Nasdaq Futures" },
+  { symbol: "YM=F",      label: "Dow Futures" },
   { symbol: "^HSI",      label: "Hang Seng" },
   { symbol: "^KS11",     label: "KOSPI" },
   { symbol: "^KQ11",     label: "KOSDAQ" },
   { symbol: "399001.SZ", label: "Shenzhen" },
 ];
+const ALL_TICKERS = [...TICKER_ROW1, ...TICKER_ROW2];
 
 /* ── 글로벌 시총 Top 20 ── */
 const TOP_STOCKS = [
@@ -80,93 +84,161 @@ const fmt = {
   },
 };
 
-/* ══════════════════════════════════════════════
-   Yahoo Finance-style Horizontal Ticker Banner
-   ══════════════════════════════════════════════ */
-function TickerBanner({ tickerData }) {
-  const scrollRef = useRef(null);
+/* ── Mini Sparkline (30-day) for ticker cards ── */
+function MiniSparkline({ data, width = 50, height = 20 }) {
+  if (!data || data.length < 3) return <div style={{ width, height }} />;
+  const clean = data.filter(v => v != null);
+  if (clean.length < 3) return <div style={{ width, height }} />;
+  const mn = Math.min(...clean), mx = Math.max(...clean), range = mx - mn || 1;
+  const up = clean[clean.length - 1] >= clean[0];
+  const color = up ? "#22c55e" : "#ef4444";
+  const pts = clean.map((v, i) =>
+    ((i / (clean.length - 1)) * width).toFixed(1) + "," +
+    (height - ((v - mn) / range) * (height - 2) - 1).toFixed(1)
+  ).join(" ");
+  return (
+    <svg width={width} height={height} style={{ display: "block", flexShrink: 0 }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ── Daily Candle indicator ── */
+function DailyCandle({ open, close, high, low }) {
+  if (open == null || close == null || high == null || low == null) return null;
+  const up = close >= open;
+  const color = up ? "#16a34a" : "#dc2626";
+  const W = 12, H = 24;
+  const range = high - low || 1;
+  const bodyTop = H - ((Math.max(open, close) - low) / range) * (H - 4) - 2;
+  const bodyBot = H - ((Math.min(open, close) - low) / range) * (H - 4) - 2;
+  const wickTop = H - ((high - low) / range) * (H - 4) - 2;
+  const wickBot = H - 2;
+  const bodyH = Math.max(bodyBot - bodyTop, 1);
+
+  return (
+    <svg width={W} height={H} style={{ display: "block", flexShrink: 0 }}>
+      {/* Wick */}
+      <line x1={W / 2} y1={wickTop} x2={W / 2} y2={wickBot} stroke={color} strokeWidth="1" />
+      {/* Body */}
+      <rect x={2} y={bodyTop} width={W - 4} height={bodyH} fill={up ? color : color} rx="1" />
+    </svg>
+  );
+}
+
+/* ── Ticker Card ── */
+function TickerCard({ item, quote, sparkData }) {
+  const price = quote?.regularMarketPrice ?? null;
+  const change = quote?.regularMarketChange ?? null;
+  const changePct = quote?.regularMarketChangePercent ?? null;
+  const pos = (change ?? 0) >= 0;
+  const color = pos ? "#22c55e" : "#ef4444";
+  const arrow = pos ? "\u25B2" : "\u25BC";
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "10px 16px",
+      minWidth: 170,
+      borderRight: "1px solid #2d2d44",
+      flexShrink: 0,
+      cursor: "default",
+      transition: "background .15s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.background = "#252542"}
+    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+    >
+      {/* Left: text */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "#8888aa", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {item.label}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#eee", marginBottom: 2 }}>
+          {price != null ? fmt.idx(price) : "\u2014"}
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 600, color, display: "flex", alignItems: "center", gap: 3 }}>
+          <span style={{ fontSize: 7 }}>{change != null ? arrow : ""}</span>
+          <span>{fmt.change(change)}</span>
+          <span>({fmt.pct(changePct)})</span>
+        </div>
+      </div>
+      {/* Right: mini sparkline */}
+      <MiniSparkline data={sparkData} />
+    </div>
+  );
+}
+
+/* ── Ticker Banner (2 rows) ── */
+function TickerBanner({ tickerData, sparklines }) {
+  const renderRow = (items) => (
+    <div style={{
+      display: "flex",
+      overflowX: "auto",
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+    }}>
+      <style>{`.ticker-scroll::-webkit-scrollbar { display: none; }`}</style>
+      {items.map(item => (
+        <TickerCard
+          key={item.symbol}
+          item={item}
+          quote={tickerData[item.symbol]}
+          sparkData={sparklines[item.symbol]}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div style={{
       background: "#1a1a2e",
-      borderBottom: "1px solid #2d2d44",
-      marginBottom: 24,
       borderRadius: 10,
       overflow: "hidden",
+      marginBottom: 24,
     }}>
-      <div
-        ref={scrollRef}
-        style={{
-          display: "flex",
-          overflowX: "auto",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          padding: "0 4px",
-        }}
-      >
-        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-        {TICKER_ITEMS.map((item) => {
-          const q = tickerData[item.symbol];
-          const price = q?.regularMarketPrice ?? null;
-          const change = q?.regularMarketChange ?? null;
-          const changePct = q?.regularMarketChangePercent ?? null;
-          const pos = (change ?? 0) >= 0;
-          const color = pos ? "#22c55e" : "#ef4444";
-          const arrow = pos ? "\u25B2" : "\u25BC";
-
-          return (
-            <div key={item.symbol} style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              padding: "12px 18px",
-              minWidth: 140,
-              borderRight: "1px solid #2d2d44",
-              flexShrink: 0,
-              cursor: "default",
-              transition: "background .15s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = "#252542"}
-            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-            >
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#a0a0c0", marginBottom: 4, whiteSpace: "nowrap" }}>
-                {item.label}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#eee", marginBottom: 2 }}>
-                {price != null ? fmt.idx(price) : "\u2014"}
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color, display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 8 }}>{change != null ? arrow : ""}</span>
-                <span>{fmt.change(change)}</span>
-                <span>({fmt.pct(changePct)})</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {renderRow(TICKER_ROW1)}
+      <div style={{ borderTop: "1px solid #2d2d44" }} />
+      {renderRow(TICKER_ROW2)}
     </div>
   );
 }
 
 /* ── PctCell ── */
 function PctCell({ value }) {
-  if (value == null) return <td style={{ ...tdR, color: "#666" }}>{"\u2014"}</td>;
+  if (value == null) return <td style={{ ...tdR, color: "#999" }}>{"\u2014"}</td>;
   const pos = value >= 0;
   return (
     <td style={tdR}>
       <span style={{
         color: pos ? "#16a34a" : "#dc2626",
         background: pos ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)",
-        padding: "4px 10px",
-        borderRadius: 6,
-        fontSize: 13,
-        fontWeight: 600,
-        display: "inline-block",
-        minWidth: 70,
-        textAlign: "center",
+        padding: "4px 10px", borderRadius: 6, fontSize: 13, fontWeight: 600,
+        display: "inline-block", minWidth: 72, textAlign: "center",
       }}>
         {fmt.pct(value)}
       </span>
+    </td>
+  );
+}
+
+/* ── DailyCell: candle + percentage ── */
+function DailyCell({ row }) {
+  const value = row.changePct;
+  if (value == null) return <td style={{ ...tdR, color: "#999" }}>{"\u2014"}</td>;
+  const pos = value >= 0;
+  return (
+    <td style={tdR}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+        <DailyCandle open={row.open} close={row.price} high={row.high} low={row.low} />
+        <span style={{
+          color: pos ? "#16a34a" : "#dc2626",
+          background: pos ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)",
+          padding: "4px 10px", borderRadius: 6, fontSize: 13, fontWeight: 600,
+          display: "inline-block", minWidth: 72, textAlign: "center",
+        }}>
+          {fmt.pct(value)}
+        </span>
+      </div>
     </td>
   );
 }
@@ -178,6 +250,7 @@ const tdR = { padding: "14px 10px", textAlign: "right", fontSize: 13, color: "#3
    ══════════════════════════════════════════════ */
 export default function StockDashboard() {
   const [tickerData, setTickerData] = useState({});
+  const [sparklines, setSparklines] = useState({});
   const [stockRows, setStockRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
@@ -190,30 +263,31 @@ export default function StockDashboard() {
       setErr(null);
 
       const allSymbols = [
-        ...TICKER_ITEMS.map(i => i.symbol),
+        ...ALL_TICKERS.map(i => i.symbol),
         ...TOP_STOCKS.map(s => s.symbol),
       ].join(",");
 
-      // Try v7 quote first
+      // 1) Try v7 quote
       let quotes = [];
       try {
         const res = await fetch("/api/stocks?type=quote&symbols=" + encodeURIComponent(allSymbols));
         const json = await res.json();
         quotes = json?.quoteResponse?.result || [];
-      } catch { /* fallback below */ }
+      } catch { /* fallback */ }
 
-      // Fallback to v8 chart
+      // 2) Fallback to v8 chart
       if (quotes.length === 0) {
         try {
           const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(allSymbols) + "&range=1mo&interval=1d");
           const chartData = await res.json();
 
-          // Ticker data from chart
           const tMap = {};
-          TICKER_ITEMS.forEach(item => {
+          const sparkMap = {};
+          ALL_TICKERS.forEach(item => {
             const c = chartData[item.symbol];
             if (!c) return;
             const closes = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
+            sparkMap[item.symbol] = closes;
             const prev = closes.length >= 2 ? closes[closes.length - 2] : null;
             const last = closes.length >= 1 ? closes[closes.length - 1] : null;
             if (last) {
@@ -225,12 +299,16 @@ export default function StockDashboard() {
             }
           });
           setTickerData(tMap);
+          setSparklines(sparkMap);
 
-          // Stock rows from chart
           const rows = TOP_STOCKS.map(meta => {
             const c = chartData[meta.symbol];
-            if (!c) return { symbol: meta.symbol, name: meta.name, price: null, marketCap: null, changePct: null, change7d: null, change30d: null };
-            const closes = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
+            if (!c) return { symbol: meta.symbol, name: meta.name, price: null, marketCap: null, changePct: null, change7d: null, change30d: null, open: null, high: null, low: null, image: null };
+            const q = c.indicators?.quote?.[0] || {};
+            const closes = (q.close || []).filter(v => v != null);
+            const opens = (q.open || []).filter(v => v != null);
+            const highs = (q.high || []).filter(v => v != null);
+            const lows = (q.low || []).filter(v => v != null);
             const last = closes[closes.length - 1] || null;
             const prev = closes.length >= 2 ? closes[closes.length - 2] : null;
             const p7d = closes.length >= 6 ? closes[closes.length - 6] : null;
@@ -240,6 +318,10 @@ export default function StockDashboard() {
               changePct: prev ? ((last - prev) / prev) * 100 : null,
               change7d: p7d ? ((last - p7d) / p7d) * 100 : null,
               change30d: p30d ? ((last - p30d) / p30d) * 100 : null,
+              open: opens[opens.length - 1] || null,
+              high: highs[highs.length - 1] || null,
+              low: lows[lows.length - 1] || null,
+              image: null,
             };
           });
           setStockRows(rows);
@@ -253,9 +335,9 @@ export default function StockDashboard() {
         }
       }
 
-      // Process v7 quote
+      // 3) Process v7 quote results
       const tMap = {};
-      const tickerSymbols = new Set(TICKER_ITEMS.map(i => i.symbol));
+      const tickerSymbols = new Set(ALL_TICKERS.map(i => i.symbol));
       quotes.forEach(q => { if (tickerSymbols.has(q.symbol)) tMap[q.symbol] = q; });
       setTickerData(tMap);
 
@@ -272,6 +354,10 @@ export default function StockDashboard() {
           changePct: q.regularMarketChangePercent,
           change7d: null,
           change30d: null,
+          open: q.regularMarketOpen,
+          high: q.regularMarketDayHigh,
+          low: q.regularMarketDayLow,
+          image: null,
         });
       });
       rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
@@ -279,19 +365,35 @@ export default function StockDashboard() {
       setUpdated(new Date());
       setLoading(false);
 
-      fetchHistorical(rows);
+      // Fetch sparklines + historical
+      fetchChartData(rows);
     } catch (e) {
       setErr("Error: " + e.message);
       setLoading(false);
     }
   }, []);
 
-  const fetchHistorical = useCallback(async (rows) => {
+  /* Fetch chart data for sparklines + 7D/30D */
+  const fetchChartData = useCallback(async (rows) => {
     try {
-      const symbols = rows.map(r => r.symbol).join(",");
-      const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(symbols) + "&range=1mo&interval=1d");
+      const allSym = [
+        ...ALL_TICKERS.map(i => i.symbol),
+        ...rows.map(r => r.symbol),
+      ].join(",");
+
+      const res = await fetch("/api/stocks?type=chart&symbols=" + encodeURIComponent(allSym) + "&range=1mo&interval=1d");
       const chartData = await res.json();
 
+      // Sparklines for tickers
+      const sparkMap = {};
+      ALL_TICKERS.forEach(item => {
+        const c = chartData[item.symbol];
+        if (!c) return;
+        sparkMap[item.symbol] = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
+      });
+      setSparklines(sparkMap);
+
+      // 7D/30D for stocks
       setStockRows(prev => {
         const updated = [...prev];
         for (const r of updated) {
@@ -315,6 +417,52 @@ export default function StockDashboard() {
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [auto, fetchAll]);
 
+  /* Company logo URL from Yahoo Finance */
+  const logoUrl = (symbol) => {
+    const clean = symbol.replace("-", ".").replace(".", "");
+    return `https://logo.clearbit.com/${clean.toLowerCase()}.com`;
+  };
+
+  /* CI-style logo with fallback */
+  function CompanyLogo({ symbol, name }) {
+    const [failed, setFailed] = useState(false);
+    // Map known symbols to proper domains for Clearbit
+    const domainMap = {
+      "NVDA": "nvidia.com", "AAPL": "apple.com", "GOOGL": "google.com",
+      "MSFT": "microsoft.com", "AMZN": "amazon.com", "META": "meta.com",
+      "TSLA": "tesla.com", "TSM": "tsmc.com", "BRK-B": "berkshirehathaway.com",
+      "AVGO": "broadcom.com", "LLY": "lilly.com", "WMT": "walmart.com",
+      "JPM": "jpmorganchase.com", "V": "visa.com", "MA": "mastercard.com",
+      "UNH": "unitedhealthgroup.com", "XOM": "exxonmobil.com", "COST": "costco.com",
+      "JNJ": "jnj.com", "ASML": "asml.com",
+    };
+    const domain = domainMap[symbol];
+    const url = domain ? `https://logo.clearbit.com/${domain}` : null;
+
+    if (!url || failed) {
+      return (
+        <div style={{
+          width: 32, height: 32, borderRadius: 8, background: "#f0f1f5",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 11, fontWeight: 700, color: "#666", flexShrink: 0,
+        }}>
+          {symbol.slice(0, 3)}
+        </div>
+      );
+    }
+
+    return (
+      <img
+        src={url}
+        alt={name}
+        width={32}
+        height={32}
+        style={{ borderRadius: 8, flexShrink: 0, background: "#fff", objectFit: "contain" }}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
   const thBase = {
     padding: "12px 10px", textAlign: "right", fontSize: 11, color: "#8b8fa3",
     fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5,
@@ -334,7 +482,7 @@ export default function StockDashboard() {
               Stock Dashboard
             </h1>
             <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 4 }}>
-              Global Top 20 by Market Cap &middot; Real-time data via Yahoo Finance
+              Global Top 20 by Market Cap &middot; Real-time via Yahoo Finance
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13, color: "#8b8fa3" }}>
@@ -346,15 +494,14 @@ export default function StockDashboard() {
               Refresh
             </button>
             <label style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer", fontSize: 12 }}>
-              <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)}
-                style={{ accentColor: "#1a1a2e" }} />
+              <input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} style={{ accentColor: "#1a1a2e" }} />
               Auto 2min
             </label>
           </div>
         </div>
 
         {/* Ticker Banner */}
-        <TickerBanner tickerData={tickerData} />
+        <TickerBanner tickerData={tickerData} sparklines={sparklines} />
 
         {/* Error */}
         {err && (
@@ -367,18 +514,18 @@ export default function StockDashboard() {
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#8b8fa3" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 8, animation: "pulse 1.5s ease-in-out infinite" }}>{"\uD83D\uDCE1"}</div>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>{"\uD83D\uDCE1"}</div>
               <p style={{ fontSize: 14 }}>Loading market data...</p>
             </div>
           </div>
         ) : (
           <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #ebedf2", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
                 <thead>
                   <tr>
                     <th style={{ ...thLeft, width: 40, textAlign: "center" }}>#</th>
-                    <th style={{ ...thLeft, minWidth: 200 }}>Company</th>
+                    <th style={{ ...thLeft, minWidth: 220 }}>Company</th>
                     <th style={thBase}>Market Cap</th>
                     <th style={thBase}>Price</th>
                     <th style={thBase}>Daily</th>
@@ -396,15 +543,7 @@ export default function StockDashboard() {
                       <td style={{ padding: "14px 10px", textAlign: "center", fontSize: 12, color: "#b0b4c0", fontWeight: 600 }}>{idx + 1}</td>
                       <td style={{ padding: "14px 10px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{
-                            width: 32, height: 32, borderRadius: 8,
-                            background: `hsl(${(idx * 37) % 360}, 55%, 92%)`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 12, fontWeight: 700, color: `hsl(${(idx * 37) % 360}, 55%, 40%)`,
-                            flexShrink: 0,
-                          }}>
-                            {r.symbol.slice(0, 2)}
-                          </div>
+                          <CompanyLogo symbol={r.symbol} name={r.name} />
                           <div>
                             <div style={{ fontWeight: 600, fontSize: 14, color: "#1a1a2e" }}>{r.name}</div>
                             <div style={{ fontSize: 11, color: "#8b8fa3", fontWeight: 500 }}>{r.symbol}</div>
@@ -413,7 +552,7 @@ export default function StockDashboard() {
                       </td>
                       <td style={{ ...tdR, color: "#555", fontSize: 13 }}>{fmt.mcap(r.marketCap)}</td>
                       <td style={{ ...tdR, fontWeight: 700, color: "#1a1a2e", fontSize: 14 }}>{fmt.price(r.price)}</td>
-                      <PctCell value={r.changePct} />
+                      <DailyCell row={r} />
                       <PctCell value={r.change7d} />
                       <PctCell value={r.change30d} />
                     </tr>
