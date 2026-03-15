@@ -16,39 +16,39 @@ const TICKER_ROW2 = [
 ];
 const ALL_TICKERS = [...TICKER_ROW1, ...TICKER_ROW2];
 
-/* ── Stock List (US + HK) ── */
+/* ── Stock List with country ── */
 const STOCKS = [
-  { symbol: "NVDA",  name: "NVIDIA",                   flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "AAPL",  name: "Apple",                     flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "GOOGL", name: "Alphabet",                  flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "MSFT",  name: "Microsoft",                 flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "AMZN",  name: "Amazon",                    flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "META",  name: "Meta Platforms",             flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "TSLA",  name: "Tesla",                     flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "TSM",   name: "TSMC",                      flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "BRK-B", name: "Berkshire Hathaway",         flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "AVGO",  name: "Broadcom",                  flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "LLY",   name: "Eli Lilly",                 flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "WMT",   name: "Walmart",                   flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "JPM",   name: "JPMorgan Chase",            flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "V",     name: "Visa",                      flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "MA",    name: "Mastercard",                flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "UNH",   name: "UnitedHealth",              flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "XOM",   name: "Exxon Mobil",               flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "COST",  name: "Costco",                    flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "JNJ",   name: "Johnson & Johnson",         flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "ASML",  name: "ASML",                      flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "FRMI",  name: "Fermi Inc.",                 flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "STSS",  name: "Sharps Technology",          flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "ALTS",  name: "ALT5 Sigma",                flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "MSTR",  name: "MicroStrategy",             flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "BMNR",  name: "Bitmine Immersion",          flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "SBET",  name: "SharpLink Gaming",           flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "CRCL",  name: "Circle Internet",            flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "LUNR",  name: "Intuitive Machines",         flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "GME",   name: "GameStop",                  flag: "\u{1F1FA}\u{1F1F8}" },
-  { symbol: "0100.HK", name: "MiniMax",                 flag: "\u{1F1ED}\u{1F1F0}" },
-  { symbol: "0728.HK", name: "China Telecom",           flag: "\u{1F1ED}\u{1F1F0}" },
+  { symbol: "NVDA", name: "NVIDIA", country: "US" },
+  { symbol: "AAPL", name: "Apple", country: "US" },
+  { symbol: "GOOGL", name: "Alphabet", country: "US" },
+  { symbol: "MSFT", name: "Microsoft", country: "US" },
+  { symbol: "AMZN", name: "Amazon", country: "US" },
+  { symbol: "META", name: "Meta Platforms", country: "US" },
+  { symbol: "TSLA", name: "Tesla", country: "US" },
+  { symbol: "TSM", name: "TSMC", country: "US" },
+  { symbol: "BRK-B", name: "Berkshire Hathaway", country: "US" },
+  { symbol: "AVGO", name: "Broadcom", country: "US" },
+  { symbol: "LLY", name: "Eli Lilly", country: "US" },
+  { symbol: "WMT", name: "Walmart", country: "US" },
+  { symbol: "JPM", name: "JPMorgan Chase", country: "US" },
+  { symbol: "V", name: "Visa", country: "US" },
+  { symbol: "MA", name: "Mastercard", country: "US" },
+  { symbol: "UNH", name: "UnitedHealth", country: "US" },
+  { symbol: "XOM", name: "Exxon Mobil", country: "US" },
+  { symbol: "COST", name: "Costco", country: "US" },
+  { symbol: "JNJ", name: "Johnson & Johnson", country: "US" },
+  { symbol: "ASML", name: "ASML", country: "US" },
+  { symbol: "FRMI", name: "Fermi Inc.", country: "US" },
+  { symbol: "STSS", name: "Sharps Technology", country: "US" },
+  { symbol: "ALTS", name: "ALT5 Sigma", country: "US" },
+  { symbol: "MSTR", name: "MicroStrategy", country: "US" },
+  { symbol: "BMNR", name: "Bitmine Immersion", country: "US" },
+  { symbol: "SBET", name: "SharpLink Gaming", country: "US" },
+  { symbol: "CRCL", name: "Circle Internet", country: "US" },
+  { symbol: "LUNR", name: "Intuitive Machines", country: "US" },
+  { symbol: "GME", name: "GameStop", country: "US" },
+  { symbol: "0100.HK", name: "MiniMax", country: "HK" },
+  { symbol: "0728.HK", name: "China Telecom", country: "HK" },
 ];
 
 const LOGO_DOMAINS = {
@@ -60,6 +60,41 @@ const LOGO_DOMAINS = {
   JNJ:"jnj.com",ASML:"asml.com",MSTR:"microstrategy.com",
   CRCL:"circle.com",LUNR:"intuitivemachines.com",GME:"gamestop.com",
 };
+
+/* ── Country Filter Tabs ── */
+const COUNTRY_FILTERS = [
+  { key: "ALL", label: "All" },
+  { key: "US", label: "US" },
+  { key: "HK", label: "Hong Kong" },
+];
+
+/* ── SVG Flags for filter tabs ── */
+function FlagSVG({ country, size = 20 }) {
+  const h = Math.round(size * 0.67);
+  const style = { borderRadius: 3, display: "block", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 };
+
+  if (country === "US") return (
+    <svg width={size} height={h} viewBox="0 0 60 42" style={style}>
+      {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i => <rect key={i} y={i*3.23} width="60" height="3.23" fill={i%2===0?"#B22234":"#fff"} />)}
+      <rect width="24" height="22.61" fill="#3C3B6E" />
+      {[...Array(50)].map((_,i)=>{const row=Math.floor(i/6),col=i%6;if(row%2===1&&col>=5)return null;const cx=row%2===0?2+col*4:4+col*4;const cy=1.5+row*2.1;return <circle key={i} cx={cx} cy={cy} r="0.7" fill="#fff"/>;})}
+    </svg>
+  );
+
+  if (country === "HK") return (
+    <svg width={size} height={h} viewBox="0 0 60 40" style={style}>
+      <rect width="60" height="40" fill="#DE2910" />
+      {[0,1,2,3,4].map(i=>{const a=(i*72-90)*Math.PI/180;const cx=30+Math.cos(a)*8;const cy=20+Math.sin(a)*8;return <ellipse key={i} cx={cx} cy={cy} rx="2.5" ry="5" fill="#fff" transform={`rotate(${i*72},${cx},${cy})`}/>;})}
+    </svg>
+  );
+
+  // ALL globe icon
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#8b8fa3" strokeWidth="1.5" style={{ display: "block" }}>
+      <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" />
+    </svg>
+  );
+}
 
 /* ── Formatters ── */
 const fmt = {
@@ -81,7 +116,7 @@ const fmt = {
   change(v) { return v == null ? "" : (v >= 0 ? "+" : "") + v.toFixed(2); },
 };
 
-/* ── MiniSpark (ticker) ── */
+/* ── MiniSpark ── */
 function MiniSpark({ data, width = 44, height = 18 }) {
   if (!data || data.filter(v => v != null).length < 3) return <div style={{ width, height }} />;
   const cl = data.filter(v => v != null);
@@ -91,13 +126,12 @@ function MiniSpark({ data, width = 44, height = 18 }) {
   return <svg width={width} height={height} style={{ display: "block", flexShrink: 0 }}><polyline points={pts} fill="none" stroke={up ? "#16a34a" : "#dc2626"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-/* ── Spark30D (table) ── */
+/* ── Spark30D ── */
 function Spark30D({ data, width = 90, height = 28 }) {
   if (!data || data.filter(v => v != null).length < 3) return null;
   const cl = data.filter(v => v != null);
   const mn = Math.min(...cl), mx = Math.max(...cl), r = mx - mn || 1;
-  const up = cl[cl.length - 1] >= cl[0];
-  const color = up ? "#16a34a" : "#dc2626";
+  const up = cl[cl.length - 1] >= cl[0]; const color = up ? "#16a34a" : "#dc2626";
   const pts = cl.map((v, i) => ((i / (cl.length - 1)) * width).toFixed(1) + "," + (height - ((v - mn) / r) * (height - 4) - 2).toFixed(1)).join(" ");
   const gId = "sg" + Math.random().toString(36).slice(2, 6);
   const fp = pts + ` ${width},${height} 0,${height}`;
@@ -113,7 +147,7 @@ function DailyCandle({ open, close, high, low }) {
   const bBot = H - ((Math.min(open, close) - low) / r) * (H - 4) - 2;
   const wTop = H - ((high - low) / r) * (H - 4) - 2;
   const bH = Math.max(bBot - bTop, 1.5);
-  return <svg width={W} height={H} style={{ display: "block", flexShrink: 0 }}><line x1={W / 2} y1={wTop} x2={W / 2} y2={H - 2} stroke={color} strokeWidth="1" /><rect x={3} y={bTop} width={W - 6} height={bH} fill={color} rx="1" /></svg>;
+  return <svg width={W} height={H} style={{ display: "block", flexShrink: 0 }}><line x1={W/2} y1={wTop} x2={W/2} y2={H-2} stroke={color} strokeWidth="1" /><rect x={3} y={bTop} width={W-6} height={bH} fill={color} rx="1" /></svg>;
 }
 
 /* ── CompanyLogo ── */
@@ -125,30 +159,21 @@ function CompanyLogo({ symbol, name }) {
   return <img src={urls[src]} alt={name} width={28} height={28} style={{ borderRadius: 6, flexShrink: 0, background: "#fff", objectFit: "contain" }} onError={() => setSrc(p => p + 1)} />;
 }
 
-/* ── CompanyCell with hover-pin ── */
+/* ── CompanyCell (hover-pin) ── */
 function CompanyCell({ row, isPinned, onTogglePin }) {
-  const [hovered, setHovered] = useState(false);
+  const [hov, setHov] = useState(false);
   return (
-    <td style={{ padding: "12px 8px" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}>
+    <td style={{ padding: "12px 8px" }} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
           <CompanyLogo symbol={row.symbol} name={row.name} />
-          {(hovered || isPinned) && (
-            <button onClick={(e) => { e.stopPropagation(); onTogglePin(row.symbol); }}
+          {(hov || isPinned) && (
+            <button onClick={e => { e.stopPropagation(); onTogglePin(row.symbol); }}
               title={isPinned ? "Unpin" : "Pin to top"}
-              style={{
-                position: "absolute", top: -6, left: -6,
-                width: 18, height: 18, borderRadius: "50%",
-                background: isPinned ? "#6366f1" : "#fff",
-                border: isPinned ? "none" : "1px solid #ddd",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", padding: 0, fontSize: 10, lineHeight: 1,
-                color: isPinned ? "#fff" : "#999",
-                transition: "all .15s",
-              }}>
+              style={{ position: "absolute", top: -6, left: -6, width: 18, height: 18, borderRadius: "50%",
+                background: isPinned ? "#6366f1" : "#fff", border: isPinned ? "none" : "1px solid #ddd",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", padding: 0, fontSize: 10, lineHeight: 1, color: isPinned ? "#fff" : "#999", transition: "all .15s" }}>
               {"\uD83D\uDCCC"}
             </button>
           )}
@@ -185,7 +210,7 @@ function TickerCard({ item, quote, sparkData }) {
 
 /* ── TickerBanner ── */
 function TickerBanner({ tickerData, sparklines }) {
-  const renderRow = (items) => <div style={{ display: "flex", width: "100%" }}>{items.map(item => <TickerCard key={item.symbol} item={item} quote={tickerData[item.symbol]} sparkData={sparklines[item.symbol]} />)}</div>;
+  const renderRow = items => <div style={{ display: "flex", width: "100%" }}>{items.map(item => <TickerCard key={item.symbol} item={item} quote={tickerData[item.symbol]} sparkData={sparklines[item.symbol]} />)}</div>;
   return (
     <div style={{ background: "#1a1a2e", borderRadius: 10, overflow: "hidden", marginBottom: 20, border: "1px solid #252547" }}>
       <div style={{ overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
@@ -196,14 +221,13 @@ function TickerBanner({ tickerData, sparklines }) {
   );
 }
 
-/* ── PctCell ── */
+/* ── PctCell / DailyCell ── */
 function PctCell({ value }) {
   if (value == null) return <td style={{ ...tdR, color: "#aaa" }}>{"\u2014"}</td>;
   const pos = value >= 0;
   return <td style={tdR}><span style={{ color: pos ? "#16a34a" : "#dc2626", background: pos ? "rgba(22,163,74,0.08)" : "rgba(220,38,38,0.08)", padding: "3px 8px", borderRadius: 5, fontSize: 12, fontWeight: 600, display: "inline-block", minWidth: 66, textAlign: "center" }}>{fmt.pct(value)}</span></td>;
 }
 
-/* ── DailyCell ── */
 function DailyCell({ row }) {
   if (row.changePct == null) return <td style={{ ...tdR, color: "#aaa" }}>{"\u2014"}</td>;
   const pos = row.changePct >= 0;
@@ -218,6 +242,7 @@ export default function StockDashboard() {
   const [sparklines, setSparklines] = useState({});
   const [stockRows, setStockRows] = useState([]);
   const [stockSpark, setStockSpark] = useState({});
+  const [countryFilter, setCountryFilter] = useState("ALL");
   const [pinnedSymbols, setPinnedSymbols] = useState(() => { try { return JSON.parse(localStorage.getItem("pinned_stocks") || "[]"); } catch { return []; } });
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
@@ -225,7 +250,7 @@ export default function StockDashboard() {
   const [auto, setAuto] = useState(true);
   const timer = useRef(null);
 
-  const togglePin = (symbol) => {
+  const togglePin = symbol => {
     setPinnedSymbols(prev => {
       const next = prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol];
       try { localStorage.setItem("pinned_stocks", JSON.stringify(next)); } catch {}
@@ -233,12 +258,31 @@ export default function StockDashboard() {
     });
   };
 
+  /* 
+   * Rank by marketCap (descending) across ALL stocks.
+   * Then filter by country and reorder pinned to top.
+   * Rank number stays based on global mcap position.
+   */
   const displayRows = React.useMemo(() => {
-    const withRank = stockRows.map((r, i) => ({ ...r, rank: i + 1 }));
-    const pinned = withRank.filter(r => pinnedSymbols.includes(r.symbol));
-    const unpinned = withRank.filter(r => !pinnedSymbols.includes(r.symbol));
+    // Sort all by mcap desc, assign global rank
+    const sorted = [...stockRows].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+    const withRank = sorted.map((r, i) => ({ ...r, rank: i + 1 }));
+
+    // Filter by country
+    const filtered = countryFilter === "ALL" ? withRank : withRank.filter(r => r.country === countryFilter);
+
+    // Pinned first, then rest
+    const pinned = filtered.filter(r => pinnedSymbols.includes(r.symbol));
+    const unpinned = filtered.filter(r => !pinnedSymbols.includes(r.symbol));
     return [...pinned, ...unpinned];
-  }, [stockRows, pinnedSymbols]);
+  }, [stockRows, countryFilter, pinnedSymbols]);
+
+  // Count per country
+  const countryCounts = React.useMemo(() => {
+    const counts = { ALL: stockRows.length };
+    stockRows.forEach(r => { counts[r.country] = (counts[r.country] || 0) + 1; });
+    return counts;
+  }, [stockRows]);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -254,7 +298,7 @@ export default function StockDashboard() {
           const tMap = {}, spMap = {}, stSpMap = {};
           ALL_TICKERS.forEach(item => { const c = cd[item.symbol]; if (!c) return; const cl = c.indicators?.quote?.[0]?.close?.filter(v => v != null) || []; spMap[item.symbol] = cl; const prev = cl.length >= 2 ? cl[cl.length - 2] : null; const last = cl[cl.length - 1] || null; if (last) tMap[item.symbol] = { regularMarketPrice: last, regularMarketChange: prev ? last - prev : null, regularMarketChangePercent: prev ? ((last - prev) / prev) * 100 : null }; });
           setTickerData(tMap); setSparklines(spMap);
-          const rows = STOCKS.map(m => { const c = cd[m.symbol]; if (!c) return { symbol: m.symbol, name: m.name, flag: m.flag, price: null, marketCap: null, changePct: null, change7d: null, change30d: null, open: null, high: null, low: null }; const q = c.indicators?.quote?.[0] || {}; const cl = (q.close || []).filter(v => v != null); const op = (q.open || []).filter(v => v != null); const hi = (q.high || []).filter(v => v != null); const lo = (q.low || []).filter(v => v != null); const last = cl[cl.length - 1] || null; const prev = cl.length >= 2 ? cl[cl.length - 2] : null; const p7 = cl.length >= 6 ? cl[cl.length - 6] : null; const p30 = cl[0] || null; stSpMap[m.symbol] = cl; return { symbol: m.symbol, name: m.name, flag: m.flag, price: last, marketCap: null, changePct: prev ? ((last - prev) / prev) * 100 : null, change7d: p7 ? ((last - p7) / p7) * 100 : null, change30d: p30 ? ((last - p30) / p30) * 100 : null, open: op[op.length - 1] || null, high: hi[hi.length - 1] || null, low: lo[lo.length - 1] || null }; });
+          const rows = STOCKS.map(m => { const c = cd[m.symbol]; if (!c) return { symbol: m.symbol, name: m.name, country: m.country, price: null, marketCap: null, changePct: null, change7d: null, change30d: null, open: null, high: null, low: null }; const q = c.indicators?.quote?.[0] || {}; const cl = (q.close || []).filter(v => v != null); const op = (q.open || []).filter(v => v != null); const hi = (q.high || []).filter(v => v != null); const lo = (q.low || []).filter(v => v != null); const last = cl[cl.length - 1] || null; const prev = cl.length >= 2 ? cl[cl.length - 2] : null; const p7 = cl.length >= 6 ? cl[cl.length - 6] : null; const p30 = cl[0] || null; stSpMap[m.symbol] = cl; return { symbol: m.symbol, name: m.name, country: m.country, price: last, marketCap: null, changePct: prev ? ((last - prev) / prev) * 100 : null, change7d: p7 ? ((last - p7) / p7) * 100 : null, change30d: p30 ? ((last - p30) / p30) * 100 : null, open: op[op.length - 1] || null, high: hi[hi.length - 1] || null, low: lo[lo.length - 1] || null }; });
           setStockRows(rows); setStockSpark(stSpMap); setUpdated(new Date()); setLoading(false); return;
         } catch (e) { setErr("Failed: " + e.message); setLoading(false); return; }
       }
@@ -265,8 +309,7 @@ export default function StockDashboard() {
 
       const ss = new Set(STOCKS.map(s => s.symbol));
       const rows = [];
-      quotes.forEach(q => { if (!ss.has(q.symbol)) return; const m = STOCKS.find(s => s.symbol === q.symbol); rows.push({ symbol: q.symbol, name: m?.name || q.shortName || q.symbol, flag: m?.flag || "\u{1F3F3}", price: q.regularMarketPrice, marketCap: q.marketCap, changePct: q.regularMarketChangePercent, change7d: null, change30d: null, open: q.regularMarketOpen, high: q.regularMarketDayHigh, low: q.regularMarketDayLow }); });
-      rows.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+      quotes.forEach(q => { if (!ss.has(q.symbol)) return; const m = STOCKS.find(s => s.symbol === q.symbol); rows.push({ symbol: q.symbol, name: m?.name || q.shortName || q.symbol, country: m?.country || "US", price: q.regularMarketPrice, marketCap: q.marketCap, changePct: q.regularMarketChangePercent, change7d: null, change30d: null, open: q.regularMarketOpen, high: q.regularMarketDayHigh, low: q.regularMarketDayLow }); });
       setStockRows(rows); setUpdated(new Date()); setLoading(false);
       fetchChartData(rows);
     } catch (e) { setErr("Error: " + e.message); setLoading(false); }
@@ -298,6 +341,7 @@ export default function StockDashboard() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f5f8", color: "#111", fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 16px" }}>
+        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "#1a1a2e", letterSpacing: -0.5 }}>Stock Dashboard</h1>
@@ -312,6 +356,30 @@ export default function StockDashboard() {
 
         <TickerBanner tickerData={tickerData} sparklines={sparklines} />
 
+        {/* Country Filter Tabs */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          {COUNTRY_FILTERS.map(f => {
+            const active = countryFilter === f.key;
+            const count = countryCounts[f.key] || 0;
+            return (
+              <button key={f.key} onClick={() => setCountryFilter(f.key)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 7,
+                  padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  border: active ? "2px solid #6366f1" : "1px solid #e0e0e8",
+                  background: active ? "#f0f0ff" : "#fff",
+                  color: active ? "#4f46e5" : "#6b7280",
+                  cursor: "pointer", transition: "all .15s",
+                  boxShadow: active ? "0 0 0 1px rgba(99,102,241,0.2)" : "none",
+                }}>
+                <FlagSVG country={f.key} size={18} />
+                <span>{f.label}</span>
+                <span style={{ fontSize: 11, color: active ? "#6366f1" : "#b0b4c0", fontWeight: 500 }}>({count})</span>
+              </button>
+            );
+          })}
+        </div>
+
         {err && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13 }}>{err}</div>}
 
         {loading ? (
@@ -321,11 +389,10 @@ export default function StockDashboard() {
         ) : (
           <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #ebedf2", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 920 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 880 }}>
                 <thead>
                   <tr>
-                    <th style={{ ...thL, width: 32, textAlign: "center", padding: "10px 4px" }}>#</th>
-                    <th style={{ ...thL, width: 28, textAlign: "center", padding: "10px 2px" }}></th>
+                    <th style={{ ...thL, width: 36, textAlign: "center", padding: "10px 4px" }}>#</th>
                     <th style={{ ...thL, minWidth: 170 }}>Company</th>
                     <th style={th}>Mcap</th>
                     <th style={th}>Price</th>
@@ -336,14 +403,13 @@ export default function StockDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayRows.map((r) => {
+                  {displayRows.map(r => {
                     const isPinned = pinnedSymbols.includes(r.symbol);
                     return (
                       <tr key={r.symbol} style={{ borderBottom: "1px solid #f3f4f6", transition: "background .12s", background: isPinned ? "rgba(99,102,241,0.04)" : "#fff" }}
                         onMouseEnter={e => e.currentTarget.style.background = isPinned ? "rgba(99,102,241,0.07)" : "#fafbfc"}
                         onMouseLeave={e => e.currentTarget.style.background = isPinned ? "rgba(99,102,241,0.04)" : "#fff"}>
                         <td style={{ padding: "12px 4px", textAlign: "center", fontSize: 11, color: "#b0b4c0", fontWeight: 600 }}>{r.rank}</td>
-                        <td style={{ padding: "12px 2px", textAlign: "center", fontSize: 14 }}>{r.flag}</td>
                         <CompanyCell row={r} isPinned={isPinned} onTogglePin={togglePin} />
                         <td style={{ ...tdR, color: "#666", fontSize: 12 }}>{fmt.mcap(r.marketCap)}</td>
                         <td style={{ ...tdR, fontWeight: 700, color: "#1a1a2e", fontSize: 14 }}>{fmt.price(r.price)}</td>
@@ -354,6 +420,9 @@ export default function StockDashboard() {
                       </tr>
                     );
                   })}
+                  {displayRows.length === 0 && !loading && (
+                    <tr><td colSpan={8} style={{ padding: 40, textAlign: "center", color: "#b0b4c0", fontSize: 14 }}>No stocks in this category</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
