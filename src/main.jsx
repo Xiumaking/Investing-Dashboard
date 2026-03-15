@@ -4,7 +4,6 @@ import { HashRouter, Routes, Route, NavLink, useLocation } from "react-router-do
 import CryptoDashboard from "./CryptoDashboard";
 import StockDashboard from "./StockDashboard";
 
-/* ── Dropdown Menu Hook ── */
 function useClickOutside(ref, handler) {
   useEffect(() => {
     const listener = (e) => {
@@ -16,26 +15,16 @@ function useClickOutside(ref, handler) {
   }, [ref, handler]);
 }
 
-/* ── Dropdown Item ── */
 function DropItem({ to, icon, label, desc, onClose }) {
   return (
-    <NavLink
-      to={to}
-      onClick={onClose}
+    <NavLink to={to} onClick={onClose}
       style={({ isActive }) => ({
         display: "flex", alignItems: "flex-start", gap: 12,
         padding: "10px 14px", borderRadius: 8, textDecoration: "none",
-        background: isActive ? "#f0f0ff" : "transparent",
-        transition: "background .12s",
+        background: isActive ? "#f0f0ff" : "transparent", transition: "background .12s",
       })}
-      onMouseEnter={e => {
-        const isActive = e.currentTarget.getAttribute("aria-current") === "page";
-        if (!isActive) e.currentTarget.style.background = "#f8f8fc";
-      }}
-      onMouseLeave={e => {
-        const isActive = e.currentTarget.getAttribute("aria-current") === "page";
-        if (!isActive) e.currentTarget.style.background = "transparent";
-      }}
+      onMouseEnter={e => { const a = e.currentTarget.getAttribute("aria-current") === "page"; if (!a) e.currentTarget.style.background = "#f8f8fc"; }}
+      onMouseLeave={e => { const a = e.currentTarget.getAttribute("aria-current") === "page"; if (!a) e.currentTarget.style.background = "transparent"; }}
     >
       <span style={{ fontSize: 20, lineHeight: 1.2, flexShrink: 0, marginTop: 1 }}>{icon}</span>
       <div>
@@ -46,23 +35,20 @@ function DropItem({ to, icon, label, desc, onClose }) {
   );
 }
 
-/* ── Navigation Bar ── */
 function Nav() {
   const [marketsOpen, setMarketsOpen] = useState(false);
   const dropRef = useRef(null);
   const location = useLocation();
-
   useClickOutside(dropRef, () => setMarketsOpen(false));
 
-  // Determine active section label
   const getActiveLabel = () => {
-    if (location.pathname === "/" || location.pathname === "/crypto") return "Crypto";
-    if (location.pathname === "/stocks") return "Stocks";
+    if (location.pathname === "/" || location.pathname === "/stocks") return "Stocks";
+    if (location.pathname === "/crypto") return "Crypto";
     if (location.pathname === "/portfolio") return "Portfolio";
     return "Markets";
   };
 
-  const isMarketsActive = location.pathname === "/" || location.pathname === "/crypto" || location.pathname === "/stocks";
+  const isMarketsActive = location.pathname === "/" || location.pathname === "/stocks" || location.pathname === "/crypto";
 
   return (
     <nav style={{
@@ -72,23 +58,19 @@ function Nav() {
       fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
       position: "sticky", top: 0, zIndex: 100,
     }}>
-      {/* Logo */}
       <div style={{ fontWeight: 800, fontSize: 17, color: "#1a1a2e", marginRight: 32, letterSpacing: -0.5, display: "flex", alignItems: "center", gap: 7 }}>
         <span style={{ fontSize: 20 }}>{"\uD83D\uDCC8"}</span>
         InvestBoard
       </div>
 
-      {/* Markets Dropdown */}
       <div ref={dropRef} style={{ position: "relative" }}>
-        <button
-          onClick={() => setMarketsOpen(!marketsOpen)}
+        <button onClick={() => setMarketsOpen(!marketsOpen)}
           style={{
             display: "flex", alignItems: "center", gap: 5,
             padding: "8px 14px", fontSize: 14, fontWeight: 600,
             color: isMarketsActive ? "#1a1a2e" : "#6b7280",
             background: marketsOpen ? "#f5f5f8" : "transparent",
-            border: "none", borderRadius: 8, cursor: "pointer",
-            transition: "all .15s",
+            border: "none", borderRadius: 8, cursor: "pointer", transition: "all .15s",
             borderBottom: isMarketsActive ? "2px solid #6366f1" : "2px solid transparent",
           }}
           onMouseEnter={e => { if (!marketsOpen) e.currentTarget.style.background = "#f8f8fc"; }}
@@ -100,47 +82,21 @@ function Nav() {
           </svg>
         </button>
 
-        {/* Dropdown Panel */}
         {marketsOpen && (
           <div style={{
             position: "absolute", top: "calc(100% + 8px)", left: 0,
             background: "#fff", borderRadius: 12,
             boxShadow: "0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-            border: "1px solid #ebedf2",
-            padding: 8, minWidth: 260,
+            border: "1px solid #ebedf2", padding: 8, minWidth: 260,
             animation: "fadeIn .15s ease-out",
           }}>
             <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-
-            <div style={{ padding: "6px 14px 8px", fontSize: 10, fontWeight: 700, color: "#b0b4c0", textTransform: "uppercase", letterSpacing: 1 }}>
-              Markets
-            </div>
-
-            <DropItem
-              to="/"
-              icon={"\uD83E\uDE99"}
-              label="Crypto"
-              desc="Real-time cryptocurrency prices & trends"
-              onClose={() => setMarketsOpen(false)}
-            />
-            <DropItem
-              to="/stocks"
-              icon={"\uD83D\uDCCA"}
-              label="Stocks"
-              desc="Global top 20 stocks by market cap"
-              onClose={() => setMarketsOpen(false)}
-            />
-
+            <div style={{ padding: "6px 14px 8px", fontSize: 10, fontWeight: 700, color: "#b0b4c0", textTransform: "uppercase", letterSpacing: 1 }}>Markets</div>
+            <DropItem to="/" icon={"\uD83D\uDCCA"} label="Stocks" desc="Global top 20 stocks by market cap" onClose={() => setMarketsOpen(false)} />
+            <DropItem to="/crypto" icon={"\uD83E\uDE99"} label="Crypto" desc="Real-time cryptocurrency prices & trends" onClose={() => setMarketsOpen(false)} />
             <div style={{ height: 1, background: "#f0f0f4", margin: "6px 8px" }} />
-
-            <div style={{ padding: "6px 14px 8px", fontSize: 10, fontWeight: 700, color: "#b0b4c0", textTransform: "uppercase", letterSpacing: 1 }}>
-              Coming Soon
-            </div>
-
-            <div style={{
-              display: "flex", alignItems: "flex-start", gap: 12,
-              padding: "10px 14px", borderRadius: 8, opacity: 0.5, cursor: "default",
-            }}>
+            <div style={{ padding: "6px 14px 8px", fontSize: 10, fontWeight: 700, color: "#b0b4c0", textTransform: "uppercase", letterSpacing: 1 }}>Coming Soon</div>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", borderRadius: 8, opacity: 0.5, cursor: "default" }}>
               <span style={{ fontSize: 20, lineHeight: 1.2, flexShrink: 0, marginTop: 1 }}>{"\uD83D\uDCB1"}</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a2e" }}>ETFs & Forex</div>
@@ -151,9 +107,7 @@ function Nav() {
         )}
       </div>
 
-      {/* Portfolio Link */}
-      <NavLink
-        to="/portfolio"
+      <NavLink to="/portfolio"
         style={({ isActive }) => ({
           display: "flex", alignItems: "center", gap: 5,
           padding: "8px 14px", fontSize: 14, fontWeight: 600,
@@ -168,16 +122,12 @@ function Nav() {
         Portfolio
       </NavLink>
 
-      {/* Spacer + active indicator */}
       <div style={{ flex: 1 }} />
-      <div style={{ fontSize: 12, color: "#b0b4c0", fontWeight: 500 }}>
-        {getActiveLabel()}
-      </div>
+      <div style={{ fontSize: 12, color: "#b0b4c0", fontWeight: 500 }}>{getActiveLabel()}</div>
     </nav>
   );
 }
 
-/* ── Portfolio Placeholder ── */
 function PortfolioPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f5f8", fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
@@ -188,10 +138,7 @@ function PortfolioPage() {
           Track your investments in real-time.<br />
           Add your holdings with average cost and see live P&L.
         </p>
-        <div style={{
-          background: "#fff", borderRadius: 12, border: "1px solid #ebedf2",
-          padding: 32, color: "#b0b4c0", fontSize: 14,
-        }}>
+        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #ebedf2", padding: 32, color: "#b0b4c0", fontSize: 14 }}>
           Coming soon — stay tuned!
         </div>
       </div>
@@ -199,14 +146,14 @@ function PortfolioPage() {
   );
 }
 
-/* ── App ── */
 function App() {
   return (
     <HashRouter>
       <Nav />
       <Routes>
-        <Route path="/" element={<CryptoDashboard />} />
+        <Route path="/" element={<StockDashboard />} />
         <Route path="/stocks" element={<StockDashboard />} />
+        <Route path="/crypto" element={<CryptoDashboard />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
       </Routes>
     </HashRouter>
