@@ -317,9 +317,12 @@ export default function CryptoDashboard() {
     <div style={{ minHeight: "100vh", background: "#fff", color: "#111", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "24px 16px" }}>
         <div style={{ marginBottom: 16 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 28 }}>{"\uD83D\uDCC8"}</span> Crypto Dashboard
+           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "#1a1a2e", letterSpacing: -0.5 }}>
+            Crypto Dashboard
           </h1>
+          <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 4 }}>
+            Real-time cryptocurrency prices & market data
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 13, color: "#6b7280" }}>
             {updated && <span>Last updated: {updated.toLocaleTimeString("en-US")}</span>}
             <button onClick={fetchAll} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline", fontSize: 13 }}>Refresh</button>
