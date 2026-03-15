@@ -16,7 +16,10 @@ const TICKER_ROW2 = [
 ];
 const ALL_TICKERS = [...TICKER_ROW1, ...TICKER_ROW2];
 
-/* ── Stock List ── */
+/* ── FX symbols to fetch (for conversion) ── */
+const FX_SYMBOLS = ["KRW=X", "HKD=X"];
+
+/* ── Stock List (fixed KS/KQ suffixes) ── */
 const STOCKS = [
   { symbol: "NVDA", name: "NVIDIA", country: "US" },
   { symbol: "AAPL", name: "Apple", country: "US" },
@@ -61,10 +64,10 @@ const STOCKS = [
   { symbol: "085620.KS", name: "미래에셋생명", country: "KR" },
   { symbol: "000540.KS", name: "흥국화재", country: "KR" },
   { symbol: "211050.KQ", name: "인카금융서비스", country: "KR" },
-  { symbol: "244920.KQ", name: "에이플러스에셋", country: "KR" },
+  { symbol: "244920.KS", name: "에이플러스에셋", country: "KR" },
   { symbol: "064260.KQ", name: "다날", country: "KR" },
   { symbol: "078340.KQ", name: "컴투스", country: "KR" },
-  { symbol: "112040.KS", name: "위메이드", country: "KR" },
+  { symbol: "112040.KQ", name: "위메이드", country: "KR" },
   { symbol: "251270.KS", name: "넷마블", country: "KR" },
   { symbol: "263750.KS", name: "펄어비스", country: "KR" },
   { symbol: "293490.KQ", name: "카카오게임즈", country: "KR" },
@@ -116,10 +119,14 @@ const fmt = {
     return "$" + p.toFixed(4);
   },
   idx(p) { return p == null ? "\u2014" : p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-  mcapKR(m) { if (m == null) return "\u2014"; if (m >= 1e16) return (m / 1e12).toFixed(1) + "\uc870"; if (m >= 1e12) return (m / 1e12).toFixed(2) + "\uc870"; if (m >= 1e8) return (m / 1e8).toFixed(0) + "\uc5B5"; return m.toLocaleString("ko-KR"); },
-  mcapHK(m) { if (m == null) return "\u2014"; if (m >= 1e12) return "HK$" + (m / 1e12).toFixed(2) + "T"; if (m >= 1e9) return "HK$" + (m / 1e9).toFixed(1) + "B"; if (m >= 1e6) return "HK$" + (m / 1e6).toFixed(0) + "M"; return "HK$" + m.toLocaleString(); },
-  mcapUS(m) { if (m == null) return "\u2014"; if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T"; if (m >= 1e9) return "$" + (m / 1e9).toFixed(1) + "B"; if (m >= 1e6) return "$" + (m / 1e6).toFixed(0) + "M"; return "$" + m.toLocaleString(); },
-  fmtMcap(m, country) { if (country === "KR") return fmt.mcapKR(m); if (country === "HK") return fmt.mcapHK(m); return fmt.mcapUS(m); },
+  mcapUSD(m) {
+    if (m == null) return "\u2014";
+    if (m >= 1e12) return "$" + (m / 1e12).toFixed(2) + "T";
+    if (m >= 1e9) return "$" + (m / 1e9).toFixed(1) + "B";
+    if (m >= 1e6) return "$" + (m / 1e6).toFixed(0) + "M";
+    if (m >= 1e3) return "$" + (m / 1e3).toFixed(0) + "K";
+    return "$" + m.toFixed(0);
+  },
   shares(s) { if (s == null) return "\u2014"; if (s >= 1e9) return (s / 1e9).toFixed(2) + "B"; if (s >= 1e6) return (s / 1e6).toFixed(1) + "M"; if (s >= 1e3) return (s / 1e3).toFixed(0) + "K"; return s.toLocaleString(); },
   pct(v) { return v == null ? "\u2014" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; },
   change(v) { return v == null ? "" : (v >= 0 ? "+" : "") + v.toFixed(2); },
@@ -158,36 +165,92 @@ export default function StockDashboard() {
   const [err,setErr]=useState(null);
   const [updated,setUpdated]=useState(null);
   const [auto,setAuto]=useState(true);
+  const [fxRates,setFxRates]=useState({KRW:1,HKD:1}); // KRW=X → 1 USD = X KRW, HKD=X → 1 USD = X HKD
   const timer=useRef(null);
 
   const togglePin=symbol=>{setPinnedSymbols(prev=>{const next=prev.includes(symbol)?prev.filter(s=>s!==symbol):[...prev,symbol];try{localStorage.setItem("pinned_stocks",JSON.stringify(next));}catch{}return next;});};
 
+  /* Convert local-currency marketCap to USD */
+  const toUSD = useCallback((mcap, country) => {
+    if (mcap == null) return null;
+    if (country === "KR") return fxRates.KRW > 0 ? mcap / fxRates.KRW : null;
+    if (country === "HK") return fxRates.HKD > 0 ? mcap / fxRates.HKD : null;
+    return mcap; // US already in USD
+  }, [fxRates]);
+
   const displayRows=React.useMemo(()=>{
     const countryStocks=stockRows.filter(r=>r.country===countryFilter);
-    const sorted=[...countryStocks].sort((a,b)=>(b.marketCap||0)-(a.marketCap||0));
+    // Convert mcap to USD for sorting
+    const withUSD = countryStocks.map(r => ({ ...r, mcapUSD: toUSD(r.marketCap, r.country) }));
+    const sorted=[...withUSD].sort((a,b)=>(b.mcapUSD||0)-(a.mcapUSD||0));
     const withRank=sorted.map((r,i)=>({...r,rank:i+1}));
     const pinned=withRank.filter(r=>pinnedSymbols.includes(r.symbol));
     const unpinned=withRank.filter(r=>!pinnedSymbols.includes(r.symbol));
     return[...pinned,...unpinned];
-  },[stockRows,countryFilter,pinnedSymbols]);
+  },[stockRows,countryFilter,pinnedSymbols,toUSD]);
 
   const countryCounts=React.useMemo(()=>{const c={};stockRows.forEach(r=>{c[r.country]=(c[r.country]||0)+1;});return c;},[stockRows]);
 
   const fetchAll=useCallback(async()=>{
     try{
       setErr(null);
-      const allSymbols=[...ALL_TICKERS.map(i=>i.symbol),...STOCKS.map(s=>s.symbol)].join(",");
+      // Include FX symbols in quote request
+      const allSymbols=[
+        ...ALL_TICKERS.map(i=>i.symbol),
+        ...STOCKS.map(s=>s.symbol),
+        ...FX_SYMBOLS,
+      ].join(",");
+
       let quotes=[];
       try{const res=await fetch("/api/stocks?type=quote&symbols="+encodeURIComponent(allSymbols));const json=await res.json();quotes=json?.quoteResponse?.result||[];}catch{}
 
+      // Extract FX rates: KRW=X means 1 USD = X KRW, HKD=X means 1 USD = X HKD
+      const newFx = { KRW: 1, HKD: 1 };
+      for (const q of quotes) {
+        if (q.symbol === "KRW=X" && q.regularMarketPrice) newFx.KRW = q.regularMarketPrice;
+        if (q.symbol === "HKD=X" && q.regularMarketPrice) newFx.HKD = q.regularMarketPrice;
+      }
+      setFxRates(newFx);
+
       if(quotes.length===0){
+        // Chart-only fallback (no v7 available)
         try{
           const res=await fetch("/api/stocks?type=chart&symbols="+encodeURIComponent(allSymbols)+"&range=1mo&interval=1d");
           const cd=await res.json();
           const tMap={},spMap={},stSpMap={};
           ALL_TICKERS.forEach(item=>{const c=cd[item.symbol];if(!c)return;const cl=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[];spMap[item.symbol]=cl;const prev=cl.length>=2?cl[cl.length-2]:null;const last=cl[cl.length-1]||null;if(last)tMap[item.symbol]={regularMarketPrice:last,regularMarketChange:prev?last-prev:null,regularMarketChangePercent:prev?((last-prev)/prev)*100:null};});
           setTickerData(tMap);setSparklines(spMap);
-          const rows=STOCKS.map(m=>{const c=cd[m.symbol];if(!c)return{symbol:m.symbol,name:m.name,country:m.country,price:null,marketCap:null,shares:null,changePct:null,change7d:null,change30d:null,open:null,high:null,low:null};const q=c.indicators?.quote?.[0]||{};const cl=(q.close||[]).filter(v=>v!=null);const op=(q.open||[]).filter(v=>v!=null);const hi=(q.high||[]).filter(v=>v!=null);const lo=(q.low||[]).filter(v=>v!=null);const last=cl[cl.length-1]||null;const prev=cl.length>=2?cl[cl.length-2]:null;const p7=cl.length>=6?cl[cl.length-6]:null;const p30=cl[0]||null;stSpMap[m.symbol]=cl;return{symbol:m.symbol,name:m.name,country:m.country,price:last,marketCap:null,shares:null,changePct:prev?((last-prev)/prev)*100:null,change7d:p7?((last-p7)/p7)*100:null,change30d:p30?((last-p30)/p30)*100:null,open:op[op.length-1]||null,high:hi[hi.length-1]||null,low:lo[lo.length-1]||null};});
+
+          // Try to get FX from chart meta
+          for (const fxSym of FX_SYMBOLS) {
+            const c = cd[fxSym];
+            if (c) {
+              const cl = c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[];
+              const last = cl[cl.length-1];
+              if (fxSym === "KRW=X" && last) newFx.KRW = last;
+              if (fxSym === "HKD=X" && last) newFx.HKD = last;
+            }
+          }
+          setFxRates({...newFx});
+
+          const rows=STOCKS.map(m=>{
+            const c=cd[m.symbol];
+            if(!c)return{symbol:m.symbol,name:m.name,country:m.country,price:null,marketCap:null,shares:null,changePct:null,change7d:null,change30d:null,open:null,high:null,low:null};
+            const q=c.indicators?.quote?.[0]||{};
+            const cl=(q.close||[]).filter(v=>v!=null);
+            const op=(q.open||[]).filter(v=>v!=null);
+            const hi=(q.high||[]).filter(v=>v!=null);
+            const lo=(q.low||[]).filter(v=>v!=null);
+            const last=cl[cl.length-1]||null;
+            const prev=cl.length>=2?cl[cl.length-2]:null;
+            const p7=cl.length>=6?cl[cl.length-6]:null;
+            const p30=cl[0]||null;
+            // Try chart meta for sharesOutstanding
+            const metaShares = c.meta?.sharesOutstanding || null;
+            const mcap = last && metaShares ? last * metaShares : null;
+            stSpMap[m.symbol]=cl;
+            return{symbol:m.symbol,name:m.name,country:m.country,price:last,marketCap:mcap,shares:metaShares,changePct:prev?((last-prev)/prev)*100:null,change7d:p7?((last-p7)/p7)*100:null,change30d:p30?((last-p30)/p30)*100:null,open:op[op.length-1]||null,high:hi[hi.length-1]||null,low:lo[lo.length-1]||null};
+          });
           setStockRows(rows);setStockSpark(stSpMap);setUpdated(new Date());setLoading(false);return;
         }catch(e){setErr("Failed: "+e.message);setLoading(false);return;}
       }
@@ -216,18 +279,39 @@ export default function StockDashboard() {
         });
       });
       setStockRows(rows);setUpdated(new Date());setLoading(false);
-      fetchChartData(rows);
+      fetchChartData(rows, newFx);
     }catch(e){setErr("Error: "+e.message);setLoading(false);}
   },[]);
 
-  const fetchChartData=useCallback(async(rows)=>{
+  const fetchChartData=useCallback(async(rows, currentFx)=>{
     try{
       const allSym=[...ALL_TICKERS.map(i=>i.symbol),...rows.map(r=>r.symbol)].join(",");
       const res=await fetch("/api/stocks?type=chart&symbols="+encodeURIComponent(allSym)+"&range=1mo&interval=1d");
       const cd=await res.json();const spMap={},stSpMap={};
       ALL_TICKERS.forEach(item=>{const c=cd[item.symbol];if(!c)return;spMap[item.symbol]=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[];});
       setSparklines(spMap);
-      setStockRows(prev=>{const u=[...prev];for(const r of u){const c=cd[r.symbol];if(!c)continue;const cl=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[];stSpMap[r.symbol]=cl;if(cl.length<2||!r.price)continue;const p7=cl.length>=6?cl[cl.length-6]:null;const p30=cl[0]||null;if(p7)r.change7d=((r.price-p7)/p7)*100;if(p30)r.change30d=((r.price-p30)/p30)*100;}return u;});
+      setStockRows(prev=>{
+        const u=[...prev];
+        for(const r of u){
+          const c=cd[r.symbol];
+          if(!c)continue;
+          const cl=c.indicators?.quote?.[0]?.close?.filter(v=>v!=null)||[];
+          stSpMap[r.symbol]=cl;
+          // Fallback: if marketCap or shares still null, try chart meta
+          if (!r.shares && c.meta?.sharesOutstanding) {
+            r.shares = c.meta.sharesOutstanding;
+          }
+          if (!r.marketCap && r.price && r.shares) {
+            r.marketCap = r.price * r.shares;
+          }
+          if(cl.length<2||!r.price)continue;
+          const p7=cl.length>=6?cl[cl.length-6]:null;
+          const p30=cl[0]||null;
+          if(p7)r.change7d=((r.price-p7)/p7)*100;
+          if(p30)r.change30d=((r.price-p30)/p30)*100;
+        }
+        return u;
+      });
       setStockSpark(stSpMap);
     }catch{}
   },[]);
@@ -244,7 +328,11 @@ export default function StockDashboard() {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:12}}>
           <div>
             <h1 style={{fontSize:22,fontWeight:800,margin:0,color:"#1a1a2e",letterSpacing:-0.5}}>Stock Dashboard</h1>
-            <div style={{fontSize:12,color:"#8b8fa3",marginTop:4}}>Realtime Stock List &middot; Yahoo Finance</div>
+            <div style={{fontSize:12,color:"#8b8fa3",marginTop:4}}>
+              Realtime Stock List &middot; Yahoo Finance
+              {fxRates.KRW > 1 && <span> &middot; 1 USD = {fxRates.KRW.toFixed(0)} KRW</span>}
+              {fxRates.HKD > 1 && <span> &middot; 1 USD = {fxRates.HKD.toFixed(2)} HKD</span>}
+            </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:14,fontSize:12,color:"#8b8fa3"}}>
             {updated&&<span>{updated.toLocaleTimeString("en-US")}</span>}
@@ -293,7 +381,7 @@ export default function StockDashboard() {
                         <td style={{padding:"12px 4px",textAlign:"center",fontSize:11,color:"#b0b4c0",fontWeight:600}}>{r.rank}</td>
                         <CompanyCell row={r} isPinned={isPinned} onTogglePin={togglePin}/>
                         <td style={{...tdR,color:"#888",fontSize:12}}>{fmt.shares(r.shares)}</td>
-                        <td style={{...tdR,color:"#666",fontSize:12}}>{fmt.fmtMcap(r.marketCap,r.country)}</td>
+                        <td style={{...tdR,color:"#666",fontSize:12}}>{fmt.mcapUSD(r.mcapUSD)}</td>
                         <td style={{...tdR,fontWeight:700,color:"#1a1a2e",fontSize:14}}>{fmt.price(r.price,r.country)}</td>
                         <DailyCell row={r}/>
                         <PctCell value={r.change7d}/>
