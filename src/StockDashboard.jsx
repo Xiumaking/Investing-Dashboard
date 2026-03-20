@@ -191,6 +191,17 @@ const STOCKS = [
   { symbol: "064350.KS", name: "현대로템", country: "KR" },
   { symbol: "041190.KQ", name: "우리기술투자", country: "KR" },
   { symbol: "121800.KQ", name: "비덴트", country: "KR" },
+  { symbol: "005930.KS", name: "삼성전자", country: "KR" },
+  { symbol: "000660.KS", name: "SK하이닉스", country: "KR" },
+  { symbol: "005935.KS", name: "삼성전자우", country: "KR" },
+  { symbol: "005380.KS", name: "현대차", country: "KR" },
+  { symbol: "373220.KS", name: "LG에너지솔루션", country: "KR" },
+  { symbol: "402340.KS", name: "SK스퀘어", country: "KR" },
+  { symbol: "207940.KS", name: "삼성바이오로직스", country: "KR" },
+  { symbol: "034020.KS", name: "두산에너빌리티", country: "KR" },
+  { symbol: "000270.KS", name: "기아", country: "KR" },
+  { symbol: "105560.KS", name: "KB금융", country: "KR" },
+  { symbol: "055550.KS", name: "신한지주", country: "KR" },
 ];
 
 const LOGO_DOMAINS = {
