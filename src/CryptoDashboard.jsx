@@ -31,6 +31,9 @@ const COINS = [
   { id: "altava",           symbol: "TAVA",   name: "ALTAVA",           tgePrice: 0.08,    tgeDate: "2022" },
   { id: "ztx",              symbol: "ZTX",    name: "ZTX",              tgePrice: 0.015,   tgeDate: "2024" },
   { id: "overprotocol",     symbol: "OVER",   name: "OverProtocol",     tgePrice: 0.80,    tgeDate: "2024" },
+  { id: "onefootball-club",  symbol: "OFC",    name: "OneFootball Club", tgePrice: 0.05,    tgeDate: "2025-08" },
+  { id: "ravedao",            symbol: "RAVE",   name: "RaveDAO",          tgePrice: 0.25,    tgeDate: "2025" },
+  { id: "skyai",              symbol: "SKYAI",  name: "SkyAI",            tgePrice: 0.03,    tgeDate: "2025" },
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
