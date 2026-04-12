@@ -97,7 +97,7 @@ function DomBar({ btc, eth }) {
   );
 }
 
-function TopBanner({ globalData, fng, mcapHistory, volHistory }) {
+function TopBanner({ globalData, fng, fngCmc, mcapHistory, volHistory }) {
   const mc = globalData?.total_market_cap?.usd;
   const mcChange = globalData?.market_cap_change_percentage_24h_usd;
   const vol = globalData?.total_volume?.usd;
@@ -356,7 +356,7 @@ export default function CryptoDashboard() {
             </label>
           </div>
         </div>
-        <TopBanner globalData={globalData} fng={fng} mcapHistory={mcapHistory} volHistory={volHistory} />
+        <TopBanner globalData={globalData} fng={fng} fngCmc={fngCmc} mcapHistory={mcapHistory} volHistory={volHistory} />
         {err && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: 12, borderRadius: 10, marginBottom: 16, fontSize: 13 }}>{err}</div>}
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#9ca3af" }}>
