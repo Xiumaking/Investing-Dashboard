@@ -1,6 +1,5 @@
 // api/fng.js — Vercel Serverless Function
 // Proxy for CoinMarketCap Fear & Greed Index (bypasses CORS)
-// Tries multiple endpoint shapes since the public frontend API may vary.
 
 const HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
@@ -10,20 +9,11 @@ const HEADERS = {
   "Origin": "https://coinmarketcap.com",
 };
 
-// Endpoints to try, in order. The frontend uses these public APIs.
-const ENDPOINTS = [
-  "https://api.coinmarketcap.com/data-api/v3/fear-greed/chart?start=1&limit=1",
-  "https://api.coinmarketcap.com/data-api/v3/fear-greed/latest",
-  "https://api.coinmarketcap.com/data-api/v3/fear-and-greed/latest",
-  "https://api.coinmarketcap.com/data-api/v3/fear-and-greed/chart?start=1&limit=1",
-];
-
 // Try to pull {value, classification, timestamp} out of various possible shapes.
 function extract(json) {
   if (!json) return null;
   const d = json.data ?? json;
 
-  // Shape A: { data: { dataList: [{ score, name, timestamp }] } }
   if (d?.dataList?.length) {
     const latest = d.dataList[d.dataList.length - 1];
     return {
@@ -32,8 +22,6 @@ function extract(json) {
       timestamp: latest.timestamp,
     };
   }
-
-  // Shape B: { data: [{ value, value_classification, timestamp }] }
   if (Array.isArray(d) && d.length) {
     const latest = d[d.length - 1];
     return {
@@ -42,8 +30,6 @@ function extract(json) {
       timestamp: latest.timestamp ?? latest.update_time,
     };
   }
-
-  // Shape C: { data: { value, value_classification } } or { data: { score, name } }
   if (typeof d === "object" && (d.value != null || d.score != null)) {
     return {
       value: d.value ?? d.score,
@@ -51,8 +37,6 @@ function extract(json) {
       timestamp: d.timestamp,
     };
   }
-
-  // Shape D: { data: { points: [{ value, ... }] } }
   if (d?.points?.length) {
     const latest = d.points[d.points.length - 1];
     return {
@@ -61,7 +45,6 @@ function extract(json) {
       timestamp: latest.timestamp,
     };
   }
-
   return null;
 }
 
@@ -73,7 +56,16 @@ export default async function handler(req, res) {
   const debug = req.query.debug === "1";
   const attempts = [];
 
-  for (const url of ENDPOINTS) {
+  // CMC fear-greed/chart expects unix timestamps (seconds) for start & end
+  const now = Math.floor(Date.now() / 1000);
+  const weekAgo = now - 7 * 24 * 60 * 60;
+
+  const endpoints = [
+    `https://api.coinmarketcap.com/data-api/v3/fear-greed/chart?start=${weekAgo}&end=${now}`,
+    `https://api.coinmarketcap.com/data-api/v3/fear-greed/historical?start=${weekAgo}&end=${now}`,
+  ];
+
+  for (const url of endpoints) {
     try {
       const response = await fetch(url, { headers: HEADERS });
       const text = await response.text();
@@ -84,10 +76,15 @@ export default async function handler(req, res) {
         url,
         status: response.status,
         ok: response.ok,
-        snippet: text.slice(0, 200),
+        snippet: text.slice(0, 300),
       });
 
       if (!response.ok || !json) continue;
+
+      // If CMC returned an error in JSON body (e.g. error_code != 0), skip
+      if (json?.status?.error_code && json.status.error_code !== "0" && json.status.error_code !== 0) {
+        continue;
+      }
 
       const parsed = extract(json);
       if (parsed && parsed.value != null) {
