@@ -65,22 +65,23 @@ function fmtRatio(v) {
   return v.toFixed(2) + " x";
 }
 
-function MiniSpark({ data, color, width = 80, height = 28 }) {
+function MiniSpark({ data, color, height = 48 }) {
   if (!data || data.length < 2) return null;
   const mn = Math.min(...data), mx = Math.max(...data), r = mx - mn || 1;
-  const pts = data.map((v, i) => ((i / (data.length - 1)) * width) + "," + (height - ((v - mn) / r) * (height - 4) - 2)).join(" ");
+  const W = 100;
+  const pts = data.map((v, i) => ((i / (data.length - 1)) * W).toFixed(2) + "," + (height - ((v - mn) / r) * (height - 4) - 2).toFixed(2)).join(" ");
   const gradId = "g" + Math.random().toString(36).slice(2, 6);
-  const fillPts = pts + ` ${width},${height} 0,${height}`;
+  const fillPts = pts + ` ${W},${height} 0,${height}`;
   return (
-    <svg width={width} height={height} style={{ display: "block" }}>
+    <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ display: "block" }}>
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={fillPts} fill={`url(#${gradId})`} />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
@@ -106,22 +107,22 @@ function TopBanner({ globalData, fng, mcapHistory, volHistory }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
       <div style={cardStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Market Cap</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginTop: 2 }}>{mc ? fmtMcap(mc) : "\u2014"}</div>
-            {mcChange != null && <div style={{ fontSize: 12, fontWeight: 600, color: mcChange >= 0 ? "#16a34a" : "#dc2626", marginTop: 1 }}>{fmtPct(mcChange)}</div>}
-          </div>
-          <MiniSpark data={mcapHistory} color={mcChange >= 0 ? "#16a34a" : "#dc2626"} />
+        <div>
+          <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Market Cap</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginTop: 2 }}>{mc ? fmtMcap(mc) : "\u2014"}</div>
+          {mcChange != null && <div style={{ fontSize: 12, fontWeight: 600, color: mcChange >= 0 ? "#16a34a" : "#dc2626", marginTop: 1 }}>{fmtPct(mcChange)}</div>}
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <MiniSpark data={mcapHistory} color={mcChange >= 0 ? "#16a34a" : "#dc2626"} height={48} />
         </div>
       </div>
       <div style={cardStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>24h Volume</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginTop: 2 }}>{vol ? fmtMcap(vol) : "\u2014"}</div>
-          </div>
-          <MiniSpark data={volHistory} color="#2563eb" />
+        <div>
+          <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>24h Volume</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginTop: 2 }}>{vol ? fmtMcap(vol) : "\u2014"}</div>
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <MiniSpark data={volHistory} color="#2563eb" height={48} />
         </div>
       </div>
       <div style={cardStyle}>
@@ -139,16 +140,31 @@ function TopBanner({ globalData, fng, mcapHistory, volHistory }) {
         </div>
         <DomBar btc={btcD} eth={ethD} />
       </div>
-      <div style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 12 }}>
-        <img src={FNG_IMG} alt="Fear & Greed" width={80} height={80} style={{ borderRadius: 8 }} />
-        <div>
-          <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Fear & Greed</div>
-          {fng ? (
-            <>
-              <div style={{ fontSize: 26, fontWeight: 700, color: fngColor(parseInt(fng.value)), marginTop: 2 }}>{fng.value}</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: fngColor(parseInt(fng.value)) }}>{fng.value_classification}</div>
-            </>
-          ) : <div style={{ fontSize: 14, color: "#9ca3af", marginTop: 4 }}>Loading...</div>}
+      <div style={cardStyle}>
+        <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Fear & Greed</div>
+        <div style={{ display: "flex", gap: 12 }}>
+          {/* Alternative.me (Bitcoin-focused) */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {fng ? (
+              <>
+                <div style={{ fontSize: 24, fontWeight: 800, color: fngColor(parseInt(fng.value)), lineHeight: 1.1 }}>{fng.value}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: fngColor(parseInt(fng.value)), marginTop: 2 }}>{fng.value_classification}</div>
+                <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 4 }}>Alternative.me</div>
+              </>
+            ) : <div style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</div>}
+          </div>
+          {/* Divider */}
+          <div style={{ width: 1, background: "#e5e7eb" }} />
+          {/* CoinMarketCap (whole market) */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {fngCmc ? (
+              <>
+                <div style={{ fontSize: 24, fontWeight: 800, color: fngColor(parseInt(fngCmc.value)), lineHeight: 1.1 }}>{fngCmc.value}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: fngColor(parseInt(fngCmc.value)), marginTop: 2 }}>{fngCmc.value_classification}</div>
+                <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 4 }}>CoinMarketCap</div>
+              </>
+            ) : <div style={{ fontSize: 13, color: "#9ca3af" }}>Loading...</div>}
+          </div>
         </div>
       </div>
     </div>
@@ -194,15 +210,24 @@ export default function CryptoDashboard() {
   const [auto, setAuto] = useState(true);
   const [globalData, setGlobalData] = useState(null);
   const [fng, setFng] = useState(null);
+  const [fngCmc, setFngCmc] = useState(null);
   const [mcapHistory, setMcapHistory] = useState(null);
   const [volHistory, setVolHistory] = useState(null);
   const timer = useRef(null);
 
   const fetchGlobal = useCallback(async () => {
     try {
-      const [gRes, fRes] = await Promise.all([fetch(CG + "/global"), fetch(FNG_API)]);
+      const [gRes, fRes, cmcRes] = await Promise.all([
+        fetch(CG + "/global"),
+        fetch(FNG_API),
+        fetch("/api/fng"),
+      ]);
       if (gRes.ok) { const gj = await gRes.json(); setGlobalData(gj.data); }
       if (fRes.ok) { const fj = await fRes.json(); if (fj.data?.[0]) setFng(fj.data[0]); }
+      if (cmcRes.ok) {
+        const cj = await cmcRes.json();
+        if (cj.value != null) setFngCmc({ value: String(cj.value), value_classification: cj.classification });
+      }
     } catch (e) { /* silent */ }
   }, []);
 
