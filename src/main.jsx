@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { HashRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
 import CryptoDashboard from "./CryptoDashboard";
 import StockDashboard from "./StockDashboard";
+import PortfolioDashboard from "./PortfolioDashboard";
 
 function useClickOutside(ref, handler) {
   useEffect(() => {
@@ -128,24 +129,6 @@ function Nav() {
   );
 }
 
-function PortfolioPage() {
-  return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f8", fontFamily: "'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "60px 16px", textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>{"\uD83D\uDCBC"}</div>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1a1a2e", marginBottom: 8 }}>Portfolio</h2>
-        <p style={{ fontSize: 15, color: "#8b8fa3", lineHeight: 1.6, marginBottom: 24 }}>
-          Track your investments in real-time.<br />
-          Add your holdings with average cost and see live P&L.
-        </p>
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #ebedf2", padding: 32, color: "#b0b4c0", fontSize: 14 }}>
-          Coming soon — stay tuned!
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   return (
     <HashRouter>
@@ -154,7 +137,7 @@ function App() {
         <Route path="/" element={<StockDashboard />} />
         <Route path="/stocks" element={<StockDashboard />} />
         <Route path="/crypto" element={<CryptoDashboard />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
+        <Route path="/portfolio" element={<PortfolioDashboard />} />
       </Routes>
     </HashRouter>
   );
