@@ -4,14 +4,24 @@ import React from "react";
 /* ═══════════════════════════════════════════════
    HARDCODED POSITIONS (edit here on GitHub)
    ─────────────────────────────────────────
-   assetType: "crypto" or "stock"
-   symbol: CoinGecko id (crypto) or Yahoo symbol (stock)
-   display: short ticker for UI
-   side: "long" or "short"
-   avg: entry price (in the asset's native currency)
-   notional: position size in USD (for crypto) or native currency (for stock)
-   leverage: 1 for spot, >1 for margin/futures
+   Binance-style futures math:
+     Size       = coin quantity (e.g. WLD units)
+     Notional   = Size × Entry  (USDT)
+     Margin     = Notional / Leverage  (Initial Margin)
+     PnL (long) = (Mark − Entry) × Size
+     PnL (short)= (Entry − Mark) × Size
+     ROI        = PnL / Margin × 100%
+     Liq (long) ≈ Entry × (1 − 1/Leverage)
+     Liq (short)≈ Entry × (1 + 1/Leverage)
    ─────────────────────────────────────────
+   Fields:
+     assetType: "crypto" or "stock"
+     symbol: CoinGecko id (crypto) or Yahoo symbol (stock)
+     display: short ticker for UI
+     side: "long" or "short"
+     avg: entry price (native currency)
+     size: coin/share quantity
+     leverage: 1 for spot, >1 for margin/futures
 ═══════════════════════════════════════════════ */
 const HARDCODED_POSITIONS = [
   {
@@ -20,19 +30,14 @@ const HARDCODED_POSITIONS = [
     display: "WLD",
     side: "long",
     avg: 0.2827851,
-    notional: 4838.64,
+    size: 46545,           // coin quantity (Binance "Size(USDT)"/Mark ≈ 14670.98/0.3152)
     leverage: 3,
     mode: "cross",
   },
 ];
 
 /* Wallet / account balance (USD) */
-const WALLET_BALANCE_USD = 8073.08;
-
-/* Symbols used by Stock Dashboard — for fetching current prices of stock positions */
-const STOCK_NATIVE_CURRENCY = {
-  ".KS": "KRW", ".KQ": "KRW", ".HK": "HKD", ".SS": "CNY", ".SZ": "CNY",
-};
+const WALLET_BALANCE_USD = 8231.68;
 
 /* ── Formatters ── */
 const fmt = {
@@ -56,58 +61,50 @@ const fmt = {
     if (v >= 1000) return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (v >= 1) return "$" + v.toFixed(2);
     if (v >= 0.01) return "$" + v.toFixed(4);
-    return "$" + v.toFixed(6);
+    return "$" + v.toFixed(7);
   },
   qty(v) {
     if (v == null) return "—";
+    if (v >= 1000) return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
     if (v >= 1) return v.toLocaleString("en-US", { maximumFractionDigits: 4 });
     return v.toFixed(4);
   },
 };
 
-/* ── PnL math ── */
+/* ── PnL math (Binance-style) ── */
 function computePosition(pos, currentPrice, fxRates) {
-  if (!currentPrice || !pos.avg) return null;
-
-  // Size = notional / avg price
-  const size = pos.notional / pos.avg;
+  if (!currentPrice || !pos.avg || !pos.size) return null;
   const isLong = pos.side === "long";
 
-  // Current position value in native currency
-  const currentValue = size * currentPrice;
+  // In native currency (USDT for crypto, KRW/HKD/etc for stock)
+  const entryNotional = pos.size * pos.avg;
+  const currentNotional = pos.size * currentPrice;   // Binance "Size (USDT)" column
+  const margin = entryNotional / pos.leverage;       // Initial margin
 
-  // PnL in native currency
   const pnlNative = isLong
-    ? (currentPrice - pos.avg) * size
-    : (pos.avg - currentPrice) * size;
+    ? (currentPrice - pos.avg) * pos.size
+    : (pos.avg - currentPrice) * pos.size;
 
-  // PnL% based on margin (actual capital at risk)
-  const margin = pos.notional / pos.leverage;
-  const pnlPct = (pnlNative / margin) * 100 * (isLong ? 1 : 1);
+  const pnlPct = (pnlNative / margin) * 100;         // ROI
 
-  // Liquidation price (simple formula)
   const liqPrice = isLong
     ? pos.avg * (1 - 1 / pos.leverage)
     : pos.avg * (1 + 1 / pos.leverage);
 
-  // Convert to USD if needed
+  // USD conversion for stocks in foreign currency
   const fx = pos.assetType === "stock" ? getStockFx(pos.symbol, fxRates) : 1;
-  const notionalUSD = pos.notional / fx;
-  const currentValueUSD = currentValue / fx;
-  const pnlUSD = pnlNative / fx;
-  const marginUSD = margin / fx;
 
   return {
-    size,
+    size: pos.size,
     currentPrice,
-    currentValue,
-    currentValueUSD,
+    entryNotional,
+    currentNotional,
+    currentNotionalUSD: currentNotional / fx,
     pnlNative,
-    pnlUSD,
+    pnlUSD: pnlNative / fx,
     pnlPct,
     margin,
-    marginUSD,
-    notionalUSD,
+    marginUSD: margin / fx,
     liqPrice,
     isLong,
   };
@@ -132,7 +129,7 @@ async function fetchCryptoPrices(cgIds) {
 }
 
 async function fetchStockPrices(symbols) {
-  if (!symbols.length) return { quotes: {}, fx: {} };
+  if (!symbols.length) return { quotes: {}, fx: { KRW: 1, HKD: 1, CNY: 1 } };
   const fxSymbols = ["KRW=X", "HKD=X", "CNY=X"];
   const all = [...symbols, ...fxSymbols].join(",");
   try {
@@ -151,7 +148,7 @@ async function fetchStockPrices(symbols) {
   } catch { return { quotes: {}, fx: { KRW: 1, HKD: 1, CNY: 1 } }; }
 }
 
-/* ── Components ── */
+/* ── UI components ── */
 function StatCard({ label, value, sub, color, size = "md" }) {
   return (
     <div style={{
@@ -160,11 +157,8 @@ function StatCard({ label, value, sub, color, size = "md" }) {
     }}>
       <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
       <div style={{
-        fontSize: size === "lg" ? 22 : 18,
-        fontWeight: 800,
-        color: color || "#1a1a2e",
-        marginTop: 4,
-        letterSpacing: -0.3,
+        fontSize: size === "lg" ? 22 : 18, fontWeight: 800,
+        color: color || "#1a1a2e", marginTop: 4, letterSpacing: -0.3,
       }}>{value}</div>
       {sub && <div style={{ fontSize: 12, fontWeight: 600, color: color || "#6b7280", marginTop: 2 }}>{sub}</div>}
     </div>
@@ -180,13 +174,9 @@ function PositionRow({ pos, calc, onDelete, editable }) {
       onMouseEnter={e => e.currentTarget.style.background = "#fafbfc"}
       onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
       <td style={{ padding: "14px 10px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#1a1a2e" }}>{pos.display}</div>
-            <div style={{ fontSize: 10, color: "#8b8fa3", textTransform: "uppercase" }}>
-              {pos.assetType}
-            </div>
-          </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1a1a2e" }}>{pos.display}</div>
+          <div style={{ fontSize: 10, color: "#8b8fa3", textTransform: "uppercase" }}>{pos.assetType}</div>
         </div>
       </td>
       <td style={{ padding: "14px 10px", textAlign: "center" }}>
@@ -200,7 +190,7 @@ function PositionRow({ pos, calc, onDelete, editable }) {
         {pos.mode && <div style={{ fontSize: 9, color: "#b0b4c0", textTransform: "uppercase" }}>{pos.mode}</div>}
       </td>
       <td style={{ padding: "14px 10px", textAlign: "right", fontSize: 13, color: "#374151" }}>
-        {fmt.qty(calc?.size)}
+        {fmt.qty(pos.size)}
       </td>
       <td style={{ padding: "14px 10px", textAlign: "right", fontSize: 13, color: "#374151" }}>
         {fmt.price(pos.avg)}
@@ -212,7 +202,10 @@ function PositionRow({ pos, calc, onDelete, editable }) {
         {calc ? fmt.price(calc.liqPrice) : "—"}
       </td>
       <td style={{ padding: "14px 10px", textAlign: "right", fontSize: 13, color: "#374151" }}>
-        {calc ? fmt.usd(calc.marginUSD) : "—"}
+        <div>{calc ? fmt.usd(calc.marginUSD) : "—"}</div>
+        <div style={{ fontSize: 10, color: "#8b8fa3" }}>
+          {calc ? `Size ${fmt.usd(calc.currentNotionalUSD)}` : ""}
+        </div>
       </td>
       <td style={{ padding: "14px 10px", textAlign: "right" }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: pnlColor }}>
@@ -237,12 +230,12 @@ function PositionRow({ pos, calc, onDelete, editable }) {
 function AddPositionForm({ onAdd, onCancel }) {
   const [form, setForm] = useState({
     assetType: "crypto", symbol: "", display: "", side: "long",
-    avg: "", notional: "", leverage: "1", mode: "cross",
+    avg: "", size: "", leverage: "1", mode: "cross",
   });
 
   const submit = () => {
-    if (!form.symbol || !form.avg || !form.notional) {
-      alert("symbol, 평단가, notional은 필수입니다.");
+    if (!form.symbol || !form.avg || !form.size) {
+      alert("symbol, 평단가, size(수량)은 필수입니다.");
       return;
     }
     onAdd({
@@ -251,7 +244,7 @@ function AddPositionForm({ onAdd, onCancel }) {
       display: (form.display || form.symbol).trim().toUpperCase(),
       side: form.side,
       avg: parseFloat(form.avg),
-      notional: parseFloat(form.notional),
+      size: parseFloat(form.size),
       leverage: parseFloat(form.leverage) || 1,
       mode: form.mode,
     });
@@ -294,14 +287,14 @@ function AddPositionForm({ onAdd, onCancel }) {
           </select>
         </div>
         <div>
-          <label style={labelStyle}>Avg price</label>
-          <input type="number" step="any" placeholder="0.28" value={form.avg}
+          <label style={labelStyle}>Avg price (Entry)</label>
+          <input type="number" step="any" placeholder="0.2827851" value={form.avg}
             onChange={e => setForm({ ...form, avg: e.target.value })} style={inputStyle} />
         </div>
         <div>
-          <label style={labelStyle}>Notional ({form.assetType === "crypto" ? "USD" : "local"})</label>
-          <input type="number" step="any" placeholder="4838.64" value={form.notional}
-            onChange={e => setForm({ ...form, notional: e.target.value })} style={inputStyle} />
+          <label style={labelStyle}>Size (coin/share qty)</label>
+          <input type="number" step="any" placeholder="46545" value={form.size}
+            onChange={e => setForm({ ...form, size: e.target.value })} style={inputStyle} />
         </div>
         <div>
           <label style={labelStyle}>Leverage</label>
@@ -334,7 +327,7 @@ function AddPositionForm({ onAdd, onCancel }) {
 /* ═══════════════════ MAIN ═══════════════════ */
 export default function PortfolioDashboard() {
   const [userPositions, setUserPositions] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("user_positions") || "[]"); }
+    try { return JSON.parse(localStorage.getItem("user_positions_v2") || "[]"); }
     catch { return []; }
   });
   const [prices, setPrices] = useState({});
@@ -352,7 +345,7 @@ export default function PortfolioDashboard() {
   const addPosition = (p) => {
     const next = [...userPositions, p];
     setUserPositions(next);
-    try { localStorage.setItem("user_positions", JSON.stringify(next)); } catch {}
+    try { localStorage.setItem("user_positions_v2", JSON.stringify(next)); } catch {}
     setShowAdd(false);
   };
 
@@ -361,7 +354,7 @@ export default function PortfolioDashboard() {
     const idx = parseInt(key.split("_")[1]);
     const next = userPositions.filter((_, i) => i !== idx);
     setUserPositions(next);
-    try { localStorage.setItem("user_positions", JSON.stringify(next)); } catch {}
+    try { localStorage.setItem("user_positions_v2", JSON.stringify(next)); } catch {}
   };
 
   const fetchAll = useCallback(async () => {
@@ -389,21 +382,18 @@ export default function PortfolioDashboard() {
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [fetchAll]);
 
-  // Compute each position
   const rows = allPositions.map(pos => {
     const priceKey = pos.assetType + ":" + pos.symbol;
     const curPrice = prices[priceKey];
     return { pos, calc: computePosition(pos, curPrice, fxRates) };
   });
 
-  // Totals
   const totalMarginUSD = rows.reduce((s, r) => s + (r.calc?.marginUSD || 0), 0);
   const totalPnlUSD = rows.reduce((s, r) => s + (r.calc?.pnlUSD || 0), 0);
-  const totalNotionalUSD = rows.reduce((s, r) => s + (r.calc?.notionalUSD || 0), 0);
+  const totalNotionalUSD = rows.reduce((s, r) => s + (r.calc?.currentNotionalUSD || 0), 0);
   const accountValue = WALLET_BALANCE_USD + totalPnlUSD;
   const totalPnlPct = totalMarginUSD > 0 ? (totalPnlUSD / totalMarginUSD) * 100 : 0;
 
-  // By asset class
   const cryptoRows = rows.filter(r => r.pos.assetType === "crypto");
   const stockRows = rows.filter(r => r.pos.assetType === "stock");
   const cryptoPnL = cryptoRows.reduce((s, r) => s + (r.calc?.pnlUSD || 0), 0);
@@ -430,7 +420,7 @@ export default function PortfolioDashboard() {
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "#1a1a2e", letterSpacing: -0.5 }}>Portfolio</h1>
             <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 4 }}>
-              Realtime PnL · All values in USD
+              Binance-style futures math · All values in USD
               {fxRates.KRW > 1 && <span> · 1 USD = {fxRates.KRW.toFixed(0)} KRW</span>}
             </div>
           </div>
@@ -445,7 +435,7 @@ export default function PortfolioDashboard() {
         {/* Summary cards */}
         <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           <StatCard
-            label="Account Value"
+            label="Margin Balance"
             value={fmt.usd(accountValue)}
             sub={`Wallet ${fmt.usd(WALLET_BALANCE_USD)} ${totalPnlUSD >= 0 ? "+" : ""}${fmt.usd(totalPnlUSD)} uPnL`}
             size="lg"
@@ -453,14 +443,14 @@ export default function PortfolioDashboard() {
           <StatCard
             label="Total Unrealized PnL"
             value={(totalPnlUSD >= 0 ? "+" : "") + fmt.usd(Math.abs(totalPnlUSD))}
-            sub={fmt.pct(totalPnlPct)}
+            sub={fmt.pct(totalPnlPct) + " ROI"}
             color={pnlColor}
             size="lg"
           />
           <StatCard
-            label="Total Margin Used"
+            label="Total Margin"
             value={fmt.usd(totalMarginUSD)}
-            sub={`Notional ${fmt.usd(totalNotionalUSD)}`}
+            sub={`Position Size ${fmt.usd(totalNotionalUSD)}`}
           />
           <StatCard
             label="Positions"
@@ -513,7 +503,7 @@ export default function PortfolioDashboard() {
           </div>
         )}
 
-        {/* Add position button / form */}
+        {/* Add position */}
         {showAdd ? (
           <AddPositionForm onAdd={addPosition} onCancel={() => setShowAdd(false)} />
         ) : (
@@ -524,7 +514,7 @@ export default function PortfolioDashboard() {
           }}>+ Add Position (browser only, not saved to GitHub)</button>
         )}
 
-        {/* Positions table */}
+        {/* Table */}
         {loading ? (
           <div style={{ textAlign: "center", padding: 60, color: "#8b8fa3", fontSize: 14 }}>Loading prices...</div>
         ) : rows.length === 0 ? (
@@ -543,12 +533,12 @@ export default function PortfolioDashboard() {
                     <th style={{ ...thL, minWidth: 100 }}>Asset</th>
                     <th style={thC}>Side</th>
                     <th style={thC}>Leverage</th>
-                    <th style={th}>Size</th>
-                    <th style={th}>Avg Price</th>
-                    <th style={th}>Current</th>
+                    <th style={th}>Qty</th>
+                    <th style={th}>Entry</th>
+                    <th style={th}>Mark</th>
                     <th style={th}>Liq. Price</th>
                     <th style={th}>Margin</th>
-                    <th style={th}>Unrealized PnL</th>
+                    <th style={th}>PnL (ROI)</th>
                     <th style={thC}></th>
                   </tr>
                 </thead>
@@ -564,7 +554,8 @@ export default function PortfolioDashboard() {
         )}
 
         <div style={{ marginTop: 16, textAlign: "center", fontSize: 11, color: "#b0b4c0" }}>
-          Prices: CoinGecko + Yahoo Finance · Auto-refresh 60s · Liquidation = simple formula (maintenance margin ignored)
+          Size × Entry = Notional · Margin = Notional / Leverage · PnL = (Mark−Entry) × Size · ROI = PnL / Margin
+          <br />Prices: CoinGecko + Yahoo Finance · Auto-refresh 60s · Liquidation = simple (maintenance margin ignored)
         </div>
       </div>
     </div>
