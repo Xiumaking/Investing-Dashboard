@@ -35,8 +35,9 @@ const COINS = [
   { id: "ravedao",            symbol: "RAVE",   name: "RaveDAO",          tgePrice: 0.25,    tgeDate: "2025" },
   { id: "skyai",              symbol: "SKYAI",  name: "SkyAI",            tgePrice: 0.03,    tgeDate: "2025" },
   { id: "opinion",            symbol: "OPN",    name: "Opinion",          tgePrice: 0.10,    tgeDate: "2026-03" },
-  { id: "genius",            symbol: "GENIUS",    name: "Genius",          tgePrice: 0.50,    tgeDate: "2026-04" },
-  { id: "USD.AI",            symbol: "CHIP",    name: "USD.AI",          tgePrice: 0.028,    tgeDate: "2026-04" },
+{ id: "genius-3",           symbol: "GENIUS", name: "Genius Terminal",  tgePrice: 0.50,    tgeDate: "2026-04" },
+{ id: "usd-ai",             symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.028,    tgeDate: "2026-03" },
+
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
