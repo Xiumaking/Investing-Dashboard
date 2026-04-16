@@ -36,7 +36,7 @@ const COINS = [
   { id: "skyai",              symbol: "SKYAI",  name: "SkyAI",            tgePrice: 0.03,    tgeDate: "2025" },
   { id: "opinion",            symbol: "OPN",    name: "Opinion",          tgePrice: 0.10,    tgeDate: "2026-03" },
 { id: "genius-3",           symbol: "GENIUS", name: "Genius Terminal",  tgePrice: 0.50,    tgeDate: "2026-04" },
-{ id: "usd-ai",             symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.028,    tgeDate: "2026-03" },
+{ id: "usd-ai",             symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.03,    tgeDate: "2026-03" },
 
 ];
 
