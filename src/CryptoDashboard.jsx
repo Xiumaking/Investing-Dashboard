@@ -308,7 +308,7 @@ export default function CryptoDashboard() {
           symbol: (item.symbol || "").toUpperCase(), image: item.image, current: cur,
           marketCap: item.market_cap || item.fully_diluted_valuation, fdv: item.fully_diluted_valuation,
           change1h: item.price_change_percentage_1h_in_currency,
-          change24H item.price_change_percentage_1h_in_currency,
+          change24H item.price_change_percentage_24h_in_currency,
           change7d: item.price_change_percentage_7d_in_currency,
           change30d: item.price_change_percentage_30d_in_currency,
           sparkline: item.sparkline_in_7d ? item.sparkline_in_7d.price : [],
@@ -387,7 +387,7 @@ export default function CryptoDashboard() {
                   <th style={thBase}>FDV</th>
                   <th style={thBase}>Price</th>
                   <th style={thBase}>1h</th>
-                  <th style={thBase}>30</th>
+                  <th style={thBase}>1D</th>
                   <th style={thBase}>7D</th>
                   <th style={thBase}>30D</th>
                   <th style={{ ...thBase, textAlign: "center" }}>Last 30 days</th>
