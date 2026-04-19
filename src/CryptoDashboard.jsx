@@ -257,7 +257,7 @@ export default function CryptoDashboard() {
       const ids = COINS.map(c => c.id).join(",");
       const url = CG + "/coins/markets?vs_currency=usd&ids=" + ids +
         "&order=market_cap_desc&per_page=100&page=1&sparkline=true" +
-        "&price_change_percentage=1h%2C7d%2C30d";
+        "&price_change_percentage=1h%2C24h%2C7d%2C30d";
       const res = await fetch(url);
       if (res.status === 429) { setErr("API rate limit reached. Auto-retry in 1 min."); return; }
       if (!res.ok) throw new Error("API Error: " + res.status);
@@ -289,6 +289,7 @@ export default function CryptoDashboard() {
                 fdv: d.market_data?.fully_diluted_valuation?.usd || null,
                 mcap: d.market_data?.market_cap?.usd || d.market_data?.fully_diluted_valuation?.usd || null,
                 change1h: d.market_data?.price_change_percentage_1h_in_currency?.usd ?? null,
+                change24h: d.market_data?.price_change_percentage_24h_in_currency?.usd ?? null,
                 change7d: d.market_data?.price_change_percentage_7d_in_currency?.usd ?? null,
                 change30d: d.market_data?.price_change_percentage_30d_in_currency?.usd ?? null,
                 sparkline: d.market_data?.sparkline_7d?.price || [],
@@ -307,6 +308,7 @@ export default function CryptoDashboard() {
           symbol: (item.symbol || "").toUpperCase(), image: item.image, current: cur,
           marketCap: item.market_cap || item.fully_diluted_valuation, fdv: item.fully_diluted_valuation,
           change1h: item.price_change_percentage_1h_in_currency,
+          change24H item.price_change_percentage_1h_in_currency,
           change7d: item.price_change_percentage_7d_in_currency,
           change30d: item.price_change_percentage_30d_in_currency,
           sparkline: item.sparkline_in_7d ? item.sparkline_in_7d.price : [],
@@ -322,7 +324,10 @@ export default function CryptoDashboard() {
           symbol: mc.symbol, image: fb?.image || null, current: cur,
           marketCap: fb?.mcap || fb?.usd_market_cap || null,
           fdv: fb?.fdv || null,
-          change1h: fb?.change1h ?? null, change7d: fb?.change7d ?? null, change30d: fb?.change30d ?? null,
+          change1h: fb?.change1h ?? null,
+          change24H: fb?.change24h ?? fb?.usd_24h_change ?? null,
+          change7d: fb?.change7d ?? null,
+          change30d: fb?.change30d ?? null,
           sparkline: fb?.sparkline || [],
           tgePrice: mc.tgePrice,
           priceOverTge: (cur && mc.tgePrice) ? cur / mc.tgePrice : null,
@@ -377,11 +382,12 @@ export default function CryptoDashboard() {
               <thead>
                 <tr>
                   <th style={{ ...thLeft, width: 36, textAlign: "center" }}>#</th>
-                  <th style={{ ...thLeft, minWidth: 160 }}>Coin</th>
+                  <th style={{ ...thLeft, minWidth: 130 }}>Coin</th>
                   <th style={thBase}>Marketcap</th>
                   <th style={thBase}>FDV</th>
                   <th style={thBase}>Price</th>
                   <th style={thBase}>1h</th>
+                  <th style={thBase}>30</th>
                   <th style={thBase}>7D</th>
                   <th style={thBase}>30D</th>
                   <th style={{ ...thBase, textAlign: "center" }}>Last 30 days</th>
@@ -408,6 +414,7 @@ export default function CryptoDashboard() {
                     <td style={S.tdR}>{fmtMcap(r.fdv)}</td>
                     <td style={{ ...S.tdR, fontWeight: 700, color: "#111", fontSize: 14 }}>{fmtPrice(r.current)}</td>
                     <PctCell value={r.change1h} />
+                    <PctCell value={r.change24h} />
                     <PctCell value={r.change7d} />
                     <PctCell value={r.change30d} />
                     <td style={{ padding: "12px 8px", textAlign: "center" }}><Spark data={r.sparkline} /></td>
