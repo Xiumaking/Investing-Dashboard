@@ -382,7 +382,7 @@ export default function CryptoDashboard() {
               <thead>
                 <tr>
                   <th style={{ ...thLeft, width: 36, textAlign: "center" }}>#</th>
-                  <th style={{ ...thLeft, minWidth: 130 }}>Coin</th>
+                  <th style={{ ...thLeft, minWidth: 100 }}>Coin</th>
                   <th style={thBase}>Marketcap</th>
                   <th style={thBase}>FDV</th>
                   <th style={thBase}>Price</th>
