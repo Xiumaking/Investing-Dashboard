@@ -31,15 +31,14 @@ const COINS = [
   { id: "altava",           symbol: "TAVA",   name: "ALTAVA",           tgePrice: 0.08,    tgeDate: "2022" },
   { id: "ztx",              symbol: "ZTX",    name: "ZTX",              tgePrice: 0.015,   tgeDate: "2024" },
   { id: "overprotocol",     symbol: "OVER",   name: "OverProtocol",     tgePrice: 0.80,    tgeDate: "2024" },
-  { id: "onefootball-club",  symbol: "OFC",    name: "OneFootball Club", tgePrice: 0.05,    tgeDate: "2025-08" },
-  { id: "ravedao",            symbol: "RAVE",   name: "RaveDAO",          tgePrice: 0.25,    tgeDate: "2025" },
-  { id: "skyai",              symbol: "SKYAI",  name: "SkyAI",            tgePrice: 0.03,    tgeDate: "2025" },
-  { id: "opinion",            symbol: "OPN",    name: "Opinion",          tgePrice: 0.10,    tgeDate: "2026-03" },
-{ id: "genius-3",           symbol: "GENIUS", name: "Genius Terminal",  tgePrice: 0.50,    tgeDate: "2026-04" },
-{ id: "usd-ai",             symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.03,    tgeDate: "2026-03" },
-{ id: "canton",             symbol: "CC",     name: "Canton",           tgePrice: 0.06,    tgeDate: "2024-07" },
-{ id: "nesa",               symbol: "NESA",   name: "Nesa",             tgePrice: null,    tgeDate: "TBD" },
-
+  { id: "onefootball-club", symbol: "OFC",    name: "OneFootball Club", tgePrice: 0.05,    tgeDate: "2025-08" },
+  { id: "ravedao",          symbol: "RAVE",   name: "RaveDAO",          tgePrice: 0.25,    tgeDate: "2025" },
+  { id: "skyai",            symbol: "SKYAI",  name: "SkyAI",            tgePrice: 0.03,    tgeDate: "2025" },
+  { id: "opinion",          symbol: "OPN",    name: "Opinion",          tgePrice: 0.10,    tgeDate: "2026-03" },
+  { id: "genius-3",         symbol: "GENIUS", name: "Genius Terminal",  tgePrice: 0.50,    tgeDate: "2026-04" },
+  { id: "usd-ai",           symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.03,    tgeDate: "2026-03" },
+  { id: "canton",           symbol: "CC",     name: "Canton",           tgePrice: 0.06,    tgeDate: "2024-07" },
+  { id: "nesa",             symbol: "NESA",   name: "Nesa",             tgePrice: null,    tgeDate: "TBD" },
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
@@ -275,34 +274,18 @@ export default function CryptoDashboard() {
           if (fbRes.ok) fallbackMap = await fbRes.json();
         } catch (e) { /* silent */ }
 
-       for (const mc of missingCoins) {
-  // simple/price에 가격이 없어도 /coins/{id}는 시도해본다 (preview/신규 코인 대응)
-  try {
-    await new Promise(r => setTimeout(r, 1200));
-    const dRes = await fetch(CG + "/coins/" + mc.id +
-      "?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=true");
-    if (dRes.ok) {
-      const d = await dRes.json();
-      const curPrice = d.market_data?.current_price?.usd ?? null;
-      fallbackMap[mc.id] = {
-        ...(fallbackMap[mc.id] || {}),
-        usd: fallbackMap[mc.id]?.usd ?? curPrice,  // simple/price 값 우선, 없으면 coin detail
-        image: d.image?.small || null,
-        fdv: d.market_data?.fully_diluted_valuation?.usd || null,
-        mcap: d.market_data?.market_cap?.usd || d.market_data?.fully_diluted_valuation?.usd || null,
-        change1h: d.market_data?.price_change_percentage_1h_in_currency?.usd ?? null,
-        change24h: d.market_data?.price_change_percentage_24h_in_currency?.usd ?? null,
-        change7d: d.market_data?.price_change_percentage_7d_in_currency?.usd ?? null,
-        change30d: d.market_data?.price_change_percentage_30d_in_currency?.usd ?? null,
-        sparkline: d.market_data?.sparkline_7d?.price || [],
-      };
-    }
-  } catch (e) { /* silent */ }
-}
+        // simple/price에 가격이 없어도 /coins/{id}는 시도해본다 (preview/신규 코인 대응)
+        for (const mc of missingCoins) {
+          try {
+            await new Promise(r => setTimeout(r, 1200));
+            const dRes = await fetch(CG + "/coins/" + mc.id +
+              "?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=true");
             if (dRes.ok) {
               const d = await dRes.json();
+              const curPrice = d.market_data?.current_price?.usd ?? null;
               fallbackMap[mc.id] = {
-                ...fallbackMap[mc.id],
+                ...(fallbackMap[mc.id] || {}),
+                usd: fallbackMap[mc.id]?.usd ?? curPrice,
                 image: d.image?.small || null,
                 fdv: d.market_data?.fully_diluted_valuation?.usd || null,
                 mcap: d.market_data?.market_cap?.usd || d.market_data?.fully_diluted_valuation?.usd || null,
@@ -374,13 +357,13 @@ export default function CryptoDashboard() {
     <div style={{ minHeight: "100vh", background: "#fff", color: "#111", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "24px 16px" }}>
         <div style={{ marginBottom: 16 }}>
-           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "#1a1a2e", letterSpacing: -0.5 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "#1a1a2e", letterSpacing: -0.5 }}>
             Crypto Dashboard
           </h1>
           <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 4 }}>
             Real-time cryptocurrency prices & market data
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 13, color: "#6b7280" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, fontSize: 13, color: "#6b7280", marginTop: 8 }}>
             {updated && <span>Last updated: {updated.toLocaleTimeString("en-US")}</span>}
             <button onClick={fetchAll} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline", fontSize: 13 }}>Refresh</button>
             <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
@@ -418,7 +401,7 @@ export default function CryptoDashboard() {
                   <tr key={r.id} style={{ borderBottom: "1px solid #f3f4f6", transition: "background .15s" }}
                     onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
                     onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
-                    <td style={{ padding: "12px 8px", textAlign: "center", fontSize: 12, color: "#9ca3af" }}>{r.rank === 9999 ? "—" : r.rank}</td>
+                    <td style={{ padding: "12px 8px", textAlign: "center", fontSize: 12, color: "#9ca3af" }}>{r.rank === 9999 ? "\u2014" : r.rank}</td>
                     <td style={{ padding: "12px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         {r.image && <img src={r.image} alt={r.symbol} width={24} height={24} style={{ borderRadius: "50%" }} />}
