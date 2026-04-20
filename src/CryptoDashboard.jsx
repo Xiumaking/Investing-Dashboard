@@ -275,12 +275,30 @@ export default function CryptoDashboard() {
           if (fbRes.ok) fallbackMap = await fbRes.json();
         } catch (e) { /* silent */ }
 
-        for (const mc of missingCoins) {
-          if (!fallbackMap[mc.id]?.usd) continue;
-          try {
-            await new Promise(r => setTimeout(r, 1200));
-            const dRes = await fetch(CG + "/coins/" + mc.id +
-              "?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=true");
+       for (const mc of missingCoins) {
+  // simple/price에 가격이 없어도 /coins/{id}는 시도해본다 (preview/신규 코인 대응)
+  try {
+    await new Promise(r => setTimeout(r, 1200));
+    const dRes = await fetch(CG + "/coins/" + mc.id +
+      "?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=true");
+    if (dRes.ok) {
+      const d = await dRes.json();
+      const curPrice = d.market_data?.current_price?.usd ?? null;
+      fallbackMap[mc.id] = {
+        ...(fallbackMap[mc.id] || {}),
+        usd: fallbackMap[mc.id]?.usd ?? curPrice,  // simple/price 값 우선, 없으면 coin detail
+        image: d.image?.small || null,
+        fdv: d.market_data?.fully_diluted_valuation?.usd || null,
+        mcap: d.market_data?.market_cap?.usd || d.market_data?.fully_diluted_valuation?.usd || null,
+        change1h: d.market_data?.price_change_percentage_1h_in_currency?.usd ?? null,
+        change24h: d.market_data?.price_change_percentage_24h_in_currency?.usd ?? null,
+        change7d: d.market_data?.price_change_percentage_7d_in_currency?.usd ?? null,
+        change30d: d.market_data?.price_change_percentage_30d_in_currency?.usd ?? null,
+        sparkline: d.market_data?.sparkline_7d?.price || [],
+      };
+    }
+  } catch (e) { /* silent */ }
+}
             if (dRes.ok) {
               const d = await dRes.json();
               fallbackMap[mc.id] = {
