@@ -6,7 +6,7 @@ const COINS = [
   { id: "ethereum",         symbol: "ETH",    name: "Ethereum",         tgePrice: 0.311,   tgeDate: "2015-07" },
   { id: "ripple",           symbol: "XRP",    name: "XRP",              tgePrice: 0.006,   tgeDate: "2013-08" },
   { id: "binancecoin",      symbol: "BNB",    name: "BNB",              tgePrice: 0.15,    tgeDate: "2017-07" },
-  { id: "Solana",           symbol: "SOL",    name: "SOL",              tgeprice: 1,       tgeDate: "2020-11" },
+  { id: "Solana",           symbol: "SOL",    name: "SOL",              tgeprice: 1.00,    tgeDate: "2020-11" },
   { id: "hyperliquid",      symbol: "HYPE",   name: "Hyperliquid",      tgePrice: 3.81,    tgeDate: "2024-11" },
   { id: "avalanche-2",      symbol: "AVAX",   name: "Avalanche",        tgePrice: 0.50,    tgeDate: "2020-09" },
   { id: "world-liberty-financial", symbol: "WLFI", name: "World Liberty Financial", tgePrice: 0.015, tgeDate: "2024-10" },
