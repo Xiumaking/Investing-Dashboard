@@ -6,7 +6,7 @@ const COINS = [
   { id: "ethereum",         symbol: "ETH",    name: "Ethereum",         tgePrice: 0.311,   tgeDate: "2015-07" },
   { id: "ripple",           symbol: "XRP",    name: "XRP",              tgePrice: 0.006,   tgeDate: "2013-08" },
   { id: "binancecoin",      symbol: "BNB",    name: "BNB",              tgePrice: 0.15,    tgeDate: "2017-07" },
-  { id: "Solana",           symbol: "SOL",    name: "SOL",              tgeprice: 1.00,    tgeDate: "2020-11" },
+  { id: "solana",           symbol: "SOL",    name: "SOL",              tgePrice: 0.22,    tgeDate: "2020-11" },
   { id: "hyperliquid",      symbol: "HYPE",   name: "Hyperliquid",      tgePrice: 3.81,    tgeDate: "2024-11" },
   { id: "avalanche-2",      symbol: "AVAX",   name: "Avalanche",        tgePrice: 0.50,    tgeDate: "2020-09" },
   { id: "world-liberty-financial", symbol: "WLFI", name: "World Liberty Financial", tgePrice: 0.015, tgeDate: "2024-10" },
@@ -42,7 +42,7 @@ const COINS = [
   { id: "nesa",             symbol: "NESA",   name: "Nesa",             tgePrice: null,    tgeDate: "TBD" },
   { id: "citrea",           symbol: "CTR",    name: "Citrea",           tgePrice: null,    tgeDate: "2026-06" },
   { id: "arcium",           symbol: "ARC",    name: "Arcium",           tgePrice: 0.02,    tgeDate: "2026" },
-  { id: "qait",             symbol: "QAIT",   name: "Sealcoin (QAIT)",  tgePrice: 0.03,    tgeDate: "2026" },
+  { id: "qait",             symbol: "QAIT",   name: "Sealcoin (QAIT)",  tgePrice: null,    tgeDate: "2026" },
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
