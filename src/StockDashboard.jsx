@@ -101,6 +101,7 @@ const STOCKS = [
   { symbol: "BIDU", name: "Baidu", country: "US" },
   { symbol: "RBLX", name: "Roblox", country: "US" },
   { symbol: "COIN", name: "Coinbase", country: "US" },
+  { symbol: "BLSH", name: "Bullish", country: "US" },
   { symbol: "HOOD", name: "Robinhood", country: "US" },
   { symbol: "BTM", name: "Bitcoin Depot", country: "US" },
   { symbol: "OKLO", name: "Oklo", country: "US" },
