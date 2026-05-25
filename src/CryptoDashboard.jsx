@@ -40,6 +40,9 @@ const COINS = [
   { id: "usd-ai",           symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.03,    tgeDate: "2026-03" },
   { id: "canton",           symbol: "CC",     name: "Canton",           tgePrice: 0.06,    tgeDate: "2024-07" },
   { id: "nesa",             symbol: "NESA",   name: "Nesa",             tgePrice: null,    tgeDate: "TBD" },
+  { id: "citrea",           symbol: "CTR",    name: "Citrea",           tgePrice: null,    tgeDate: "2026-06" },
+  { id: "arcium",           symbol: "ARC",    name: "Arcium",           tgePrice: 0.02,    tgeDate: "2026" },
+
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
