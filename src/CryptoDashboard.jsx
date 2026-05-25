@@ -39,10 +39,14 @@ const COINS = [
   { id: "genius-3",         symbol: "GENIUS", name: "Genius Terminal",  tgePrice: 0.50,    tgeDate: "2026-04" },
   { id: "usd-ai",           symbol: "CHIP",   name: "USD.AI",           tgePrice: 0.03,    tgeDate: "2026-03" },
   { id: "canton",           symbol: "CC",     name: "Canton",           tgePrice: 0.06,    tgeDate: "2024-07" },
-  { id: "nesa",             symbol: "NESA",   name: "Nesa",             tgePrice: null,    tgeDate: "TBD" },
   { id: "citrea",           symbol: "CTR",    name: "Citrea",           tgePrice: null,    tgeDate: "2026-06" },
   { id: "arcium",           symbol: "ARC",    name: "Arcium",           tgePrice: 0.02,    tgeDate: "2026" },
-  { id: "qait",             symbol: "QAIT",   name: "Sealcoin (QAIT)",  tgePrice: null,    tgeDate: "2026" },
+];
+
+// 관심 코인 (CoinGecko 미등록 / TGE 대기 중 — 조회하지 않음, 정보만 표시)
+const WATCHLIST = [
+  { symbol: "NESA",  name: "Nesa",            tgeDate: "TBD" },
+  { symbol: "QAIT",  name: "Sealcoin (QAIT)", tgeDate: "2026-06" },
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
@@ -437,6 +441,36 @@ export default function CryptoDashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+                {/* Watchlist — TGE 대기 중인 관심 코인 (CoinGecko 미조회) */}
+        {WATCHLIST.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+              <span>⭐ Watchlist</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: "#9ca3af" }}>TGE 대기 중인 관심 코인</span>
+            </div>
+            <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fafbfc" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thLeft, background: "#fafbfc" }}>Symbol</th>
+                    <th style={{ ...thLeft, background: "#fafbfc" }}>Name</th>
+                    <th style={{ ...thLeft, background: "#fafbfc" }}>Expected TGE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {WATCHLIST.map((w) => (
+                    <tr key={w.symbol} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                      <td style={{ padding: "12px 8px", fontWeight: 700, fontSize: 13, color: "#1a1a2e" }}>{w.symbol}</td>
+                      <td style={{ padding: "12px 8px", fontSize: 13, color: "#374151" }}>{w.name}</td>
+                      <td style={{ padding: "12px 8px", fontSize: 12, color: "#6b7280" }}>{w.tgeDate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
         <div style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
