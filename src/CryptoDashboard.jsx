@@ -31,7 +31,6 @@ const COINS = [
   { id: "xpla",             symbol: "XPLA",   name: "XPLA",             tgePrice: 0.30,    tgeDate: "2022-10" },
   { id: "altava",           symbol: "TAVA",   name: "ALTAVA",           tgePrice: 0.08,    tgeDate: "2022" },
   { id: "ztx",              symbol: "ZTX",    name: "ZTX",              tgePrice: 0.015,   tgeDate: "2024" },
-  { id: "overprotocol",     symbol: "OVER",   name: "OverProtocol",     tgePrice: 0.80,    tgeDate: "2024" },
   { id: "onefootball-club", symbol: "OFC",    name: "OneFootball Club", tgePrice: 0.05,    tgeDate: "2025-08" },
   { id: "ravedao",          symbol: "RAVE",   name: "RaveDAO",          tgePrice: 0.25,    tgeDate: "2025" },
   { id: "skyai",            symbol: "SKYAI",  name: "SkyAI",            tgePrice: 0.03,    tgeDate: "2025" },
@@ -41,12 +40,12 @@ const COINS = [
   { id: "canton-network",   symbol: "CC",     name: "Canton",           tgePrice: 0.06,    tgeDate: "2024-07" },
   { id: "citrea",           symbol: "CTR",    name: "Citrea",           tgePrice: null,    tgeDate: "2026-06" },
   { id: "arcium",           symbol: "ARC",    name: "Arcium",           tgePrice: 0.02,    tgeDate: "2026" },
+  { id: "sealcoin",         symbol: "QAIT",   name: "Sealcoin",         tgePrice: 0.01,    tgeDate: "2026-05" },
 ];
 
 // 관심 코인 (CoinGecko 미등록 / TGE 대기 중 — 조회하지 않음, 정보만 표시)
 const WATCHLIST = [
   { symbol: "NESA",  name: "Nesa",            tgeDate: "TBD" },
-  { symbol: "QAIT",  name: "Sealcoin (QAIT)", tgeDate: "2026-06" },
 ];
 
 const CG = "https://api.coingecko.com/api/v3";
